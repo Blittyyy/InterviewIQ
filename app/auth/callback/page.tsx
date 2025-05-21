@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -8,7 +8,19 @@ import { CheckCircleIcon, AlertCircle } from "lucide-react"
 import { getSupabaseClient } from "@/lib/supabase"
 import BackgroundBlobs from "@/components/BackgroundBlobs"
 
-export default function AuthCallback() {
+function LoadingState() {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#F4F7FE] to-white px-4 relative overflow-hidden">
+      <BackgroundBlobs />
+      <div className="flex flex-col items-center space-y-2">
+        <div className="h-12 w-12 rounded-full bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] animate-pulse mb-2" />
+        <h1 className="text-xl font-semibold text-gray-900">Loading...</h1>
+      </div>
+    </div>
+  )
+}
+
+function AuthCallbackContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>("loading")
   const [errorMsg, setErrorMsg] = useState("")
   const [resendStatus, setResendStatus] = useState<'idle' | 'loading' | 'success' | 'error'>("idle")
@@ -19,45 +31,52 @@ export default function AuthCallback() {
 
   useEffect(() => {
     const handleAuth = async () => {
-      // Try both 'code' and 'access_token' for compatibility
-      const code = searchParams.get("code") || searchParams.get("access_token")
-      if (!code) {
+      try {
+        // Try both 'code' and 'access_token' for compatibility
+        const code = searchParams.get("code") || searchParams.get("access_token")
+        if (!code) {
+          setStatus("error")
+          setErrorMsg("No confirmation code found in the URL.")
+          return
+        }
+        const supabase = getSupabaseClient()
+        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        if (error) {
+          setStatus("error")
+          setErrorMsg(error.message || "There was a problem confirming your email.")
+        } else {
+          setStatus("success")
+        }
+      } catch (error) {
         setStatus("error")
-        setErrorMsg("No confirmation code found in the URL.")
-        return
-      }
-      const supabase = getSupabaseClient()
-      const { error } = await supabase.auth.exchangeCodeForSession(code)
-      if (error) {
-        setStatus("error")
-        setErrorMsg(error.message || "There was a problem confirming your email.")
-      } else {
-        setStatus("success")
+        setErrorMsg("An unexpected error occurred.")
       }
     }
     handleAuth()
-    // Only run on mount
-    // eslint-disable-next-line
-  }, [])
+  }, [searchParams])
 
   const handleResend = async () => {
     setResendStatus("loading")
     setResendMsg("")
-    const email = searchParams.get("email") || emailInput
-    if (!email) {
+    try {
+      const email = searchParams.get("email") || emailInput
+      if (!email) {
+        setResendStatus("error")
+        setResendMsg("Please enter your email address.")
+        return
+      }
+      const supabase = getSupabaseClient()
+      const { error } = await supabase.auth.resend({ type: "signup", email })
+      if (error) {
+        setResendStatus("error")
+        setResendMsg(error.message || "Failed to resend confirmation email.")
+      } else {
+        setResendStatus("success")
+        setResendMsg("Confirmation email sent! Please check your inbox.")
+      }
+    } catch (error) {
       setResendStatus("error")
-      setResendMsg("Please enter your email address.")
-      return
-    }
-    const supabase = getSupabaseClient()
-    // Supabase v2: resend confirmation email
-    const { error } = await supabase.auth.resend({ type: "signup", email })
-    if (error) {
-      setResendStatus("error")
-      setResendMsg(error.message || "Failed to resend confirmation email.")
-    } else {
-      setResendStatus("success")
-      setResendMsg("Confirmation email sent! Please check your inbox.")
+      setResendMsg("An unexpected error occurred.")
     }
   }
 
@@ -118,5 +137,13 @@ export default function AuthCallback() {
         )}
       </Card>
     </div>
+  )
+}
+
+export default function AuthCallback() {
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <AuthCallbackContent />
+    </Suspense>
   )
 } 
