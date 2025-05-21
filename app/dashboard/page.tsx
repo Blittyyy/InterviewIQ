@@ -30,7 +30,7 @@ export default function DashboardPage() {
               </Link>
             </div>
             {/* Right: New Report button */}
-            <Link href="/">
+            <Link href="/#generate-report">
               <Button className="bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] text-white">
                 <PlusIcon className="h-4 w-4 mr-2" />
                 New Report
@@ -57,7 +57,7 @@ export default function DashboardPage() {
               <p className="text-gray-600 mb-6">
                 Generate your first company research report to prepare for your interview.
               </p>
-              <Link href="/">
+              <Link href="/#generate-report">
                 <Button className="bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] text-white">
                   <PlusIcon className="h-4 w-4 mr-2" />
                   Generate Report

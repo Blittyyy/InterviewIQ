@@ -14,7 +14,7 @@ export default function PricingSection() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
         {/* Free Plan */}
-        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-all">
+        <Card className="border border-gray-200 shadow-sm hover:shadow-xl hover:scale-105 transition-all duration-300 transform-gpu">
           <CardHeader className="pb-4">
             <CardTitle className="text-xl">Free</CardTitle>
             <div className="mt-2">
@@ -47,7 +47,7 @@ export default function PricingSection() {
         </Card>
 
         {/* Day Pass */}
-        <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-all">
+        <Card className="border border-gray-200 shadow-sm hover:shadow-xl hover:scale-105 transition-all duration-300 transform-gpu">
           <CardHeader className="pb-4">
             <CardTitle className="text-xl">Day Pass</CardTitle>
             <div className="mt-2">
@@ -80,7 +80,7 @@ export default function PricingSection() {
         </Card>
 
         {/* Pro Plan */}
-        <Card className="border-2 border-[#4B6EF5] shadow-md hover:shadow-lg transition-all relative overflow-hidden">
+        <Card className="border-2 border-[#4B6EF5] shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 transform-gpu relative overflow-hidden">
           <div className="absolute top-0 right-0 bg-[#4B6EF5] text-white text-xs font-bold py-1 px-3 rounded-bl-md">
             POPULAR
           </div>

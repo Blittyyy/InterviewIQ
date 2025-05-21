@@ -27,7 +27,17 @@ export default function ReportPage({ params }: { params: { id: string } }) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F4F7FE] to-white">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-8">
+        <div className="mb-8 flex flex-col gap-2">
+          <div className="flex justify-start">
+            <Link href="/" className="block">
+              <button
+                type="button"
+                className="py-2 px-5 rounded-lg border-2 border-transparent bg-white shadow-sm font-semibold text-[#4B6EF5] transition-all duration-200 hover:bg-gradient-to-r hover:from-[#F4F7FE] hover:to-[#E9E3FF] hover:border-[#8C52FF] focus:outline-none focus:ring-2 focus:ring-[#8C52FF]"
+              >
+                Go to Home
+              </button>
+            </Link>
+          </div>
           <Link href="/dashboard">
             <Button variant="ghost" className="mb-4">
               <ArrowLeftIcon className="h-4 w-4 mr-2" />

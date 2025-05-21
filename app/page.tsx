@@ -11,6 +11,7 @@ import { useEffect, useState } from "react"
 import { getSupabaseClient } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import BackgroundBlobs from "@/components/BackgroundBlobs"
+import { SparklesText } from "@/components/ui/sparkles-text"
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
@@ -60,17 +61,19 @@ export default function Home() {
           </div>
           {/* Center: Pricing */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <a href="#pricing" className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-              Pricing
+            <a href="#pricing" className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium flex items-center">
+              <SparklesText text="Pricing" className="text-base" sparklesCount={8} />
             </a>
           </div>
           {/* Right: Action buttons */}
           <div className="flex items-center gap-2">
             {isAuthenticated === null ? null : isAuthenticated ? (
               <>
-                <Button className="bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] text-white hover:shadow-lg transition-all">
-                  <span className="mr-1">+</span> New Report
-                </Button>
+                <a href="#generate-report" className="block">
+                  <Button className="bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] text-white hover:shadow-lg transition-all w-full">
+                    <span className="mr-1">+</span> New Report
+                  </Button>
+                </a>
                 <Button variant="ghost" onClick={handleLogout} className="transition-all">
                   Log Out
                 </Button>
@@ -103,6 +106,31 @@ export default function Home() {
               Generate smart, personalized company research reports to ace your job interviews.
             </p>
 
+            {/* Demo Preview */}
+            <div className="relative max-w-3xl mx-auto mb-8 rounded-lg overflow-hidden shadow-2xl">
+              <div className="aspect-video bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="animate-pulse-slow inline-flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-r from-[#4B6EF5]/20 to-[#8C52FF]/20 mb-4">
+                    <LightningBoltIcon className="h-8 w-8 text-white" />
+                  </div>
+                  <p className="text-white text-lg">See InterviewIQ in action</p>
+                </div>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+              <a href={isAuthenticated ? "/dashboard" : "/signup"}>
+                <Button className="bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] text-white px-8 py-6 text-lg hover:shadow-lg transition-all w-full sm:w-auto">
+                  {isAuthenticated ? "Go to Dashboard" : "Get Started Free"}
+                </Button>
+              </a>
+              <Button variant="outline" className="px-8 py-6 text-lg hover:bg-gray-50 transition-all w-full sm:w-auto">
+                Watch Demo
+              </Button>
+            </div>
+
             {/* Feature Tags */}
             <div className="flex flex-wrap justify-center gap-3 mb-6">
               <Badge
@@ -129,8 +157,30 @@ export default function Home() {
             </div>
 
             {/* Waitlist Section - Moved here and made more compact */}
-            <div className="max-w-md mx-auto mb-6">
+            <div className="max-w-md mx-auto mt-4 mb-2">
               <WaitlistForm compact={true} />
+            </div>
+          </div>
+        </div>
+
+        {/* Statistics Section */}
+        <div className="max-w-4xl mx-auto mb-16">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div className="p-4">
+              <div className="text-3xl font-bold text-[#4B6EF5] mb-2">10k+</div>
+              <div className="text-sm text-gray-600">Reports Generated</div>
+            </div>
+            <div className="p-4">
+              <div className="text-3xl font-bold text-[#8C52FF] mb-2">95%</div>
+              <div className="text-sm text-gray-600">Success Rate</div>
+            </div>
+            <div className="p-4">
+              <div className="text-3xl font-bold text-[#10F2C5] mb-2">500+</div>
+              <div className="text-sm text-gray-600">Companies Analyzed</div>
+            </div>
+            <div className="p-4">
+              <div className="text-3xl font-bold text-[#4B6EF5] mb-2">24/7</div>
+              <div className="text-sm text-gray-600">Support Available</div>
             </div>
           </div>
         </div>
@@ -169,8 +219,35 @@ export default function Home() {
           />
         </div>
 
+        {/* Testimonials Section */}
+        <div className="max-w-4xl mx-auto mb-16">
+          <h2 className="text-2xl font-bold text-center mb-8">Trusted by Job Seekers</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 transform-gpu">
+              <div className="flex items-center mb-4">
+                <div className="h-10 w-10 rounded-full bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] flex items-center justify-center text-white font-bold">JD</div>
+                <div className="ml-4">
+                  <h3 className="font-semibold">John Doe</h3>
+                  <p className="text-sm text-gray-600">Software Engineer</p>
+                </div>
+              </div>
+              <p className="text-gray-700">"InterviewIQ helped me prepare for my dream job at Google. The company insights were spot-on and the talking points were incredibly helpful!"</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 transform-gpu">
+              <div className="flex items-center mb-4">
+                <div className="h-10 w-10 rounded-full bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] flex items-center justify-center text-white font-bold">AS</div>
+                <div className="ml-4">
+                  <h3 className="font-semibold">Alice Smith</h3>
+                  <p className="text-sm text-gray-600">Product Manager</p>
+                </div>
+              </div>
+              <p className="text-gray-700">"The culture insights were invaluable. I was able to align my experience with the company's values and got the job!"</p>
+            </div>
+          </div>
+        </div>
+
         {/* Main Form Section */}
-        <div className="max-w-3xl mx-auto mb-4">
+        <div id="generate-report" className="max-w-3xl mx-auto mb-4">
           <ReportForm />
         </div>
 

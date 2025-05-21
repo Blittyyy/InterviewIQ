@@ -59,13 +59,13 @@ export default function FeatureCard({ icon, title, description }: FeatureCardPro
   }
 
   return (
-    <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-all">
+    <Card className="overflow-hidden border-0 shadow-md hover:shadow-xl hover:scale-105 hover:bg-gradient-to-br hover:from-white hover:to-gray-50 transition-all duration-300 transform-gpu origin-center will-change-transform">
       <CardContent className="p-6">
-        <div className="h-10 w-10 rounded-full bg-gradient-to-r from-[#4B6EF5]/10 to-[#8C52FF]/10 flex items-center justify-center mb-4">
-          <div className="text-[#4B6EF5]">{getIcon()}</div>
+        <div className="h-10 w-10 rounded-full bg-gradient-to-r from-[#4B6EF5]/10 to-[#8C52FF]/10 flex items-center justify-center mb-4 transform-gpu will-change-transform">
+          <div className="text-[#4B6EF5] transition-colors duration-300">{getIcon()}</div>
         </div>
-        <h3 className="text-lg font-semibold mb-2">{title}</h3>
-        <p className="text-gray-600 text-sm">{description}</p>
+        <h3 className="text-lg font-semibold mb-2 transition-colors duration-300">{title}</h3>
+        <p className="text-gray-600 text-sm transition-colors duration-300">{description}</p>
       </CardContent>
     </Card>
   )
