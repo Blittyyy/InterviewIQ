@@ -1,7 +1,15 @@
 import { NextResponse } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabase"
+import { requireAuth } from "@/lib/requireAuth"
+import { NextRequest } from "next/server"
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  // Validate JWT
+  const { user, error } = await requireAuth(request)
+  if (error) {
+    return NextResponse.json({ error }, { status: 401 })
+  }
+
   try {
     const { email } = await request.json()
 
@@ -11,15 +19,15 @@ export async function POST(request: Request) {
 
     const supabase = createServerSupabaseClient()
 
-    const { error } = await supabase.from("waitlist").insert([{ email, status: "pending" }])
+    const { error: supabaseError } = await supabase.from("waitlist").insert([{ email, status: "pending" }])
 
-    if (error) {
-      if (error.code === "23505") {
+    if (supabaseError) {
+      if (supabaseError.code === "23505") {
         // Unique violation error code
         return NextResponse.json({ error: "This email is already on our waitlist!" }, { status: 409 })
       }
 
-      console.error("Supabase error:", error)
+      console.error("Supabase error:", supabaseError)
       return NextResponse.json({ error: "Failed to add to waitlist" }, { status: 500 })
     }
 

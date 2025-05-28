@@ -114,7 +114,7 @@ export default function Home() {
                   <div className="animate-pulse-slow inline-flex items-center justify-center h-20 w-20 rounded-full bg-white mb-4 shadow-lg border border-gray-200">
                     <Image src="/logo.png" alt="Logo" width={48} height={48} className="h-12 w-12 object-contain" />
                   </div>
-                  <p className="text-white text-lg">See InterviewIQ in action</p>
+                  <p className="text-white text-lg">Demo not released yet.</p>
                 </div>
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>

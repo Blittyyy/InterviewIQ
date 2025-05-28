@@ -1,7 +1,14 @@
-import { NextResponse } from "next/server"
+import { NextResponse, NextRequest } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabase"
+import { requireAuth } from "@/lib/requireAuth"
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+  // Validate JWT
+  const { user, error } = await requireAuth(request)
+  if (error) {
+    return NextResponse.json({ error }, { status: 401 })
+  }
+
   try {
     const reportId = params.id
 
@@ -11,10 +18,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     const supabase = createServerSupabaseClient()
 
-    const { data, error } = await supabase.from("reports").select("*").eq("id", reportId).single()
+    const { data, error: supabaseError } = await supabase.from("reports").select("*").eq("id", reportId).single()
 
-    if (error) {
-      console.error("Error fetching report:", error)
+    if (supabaseError) {
+      console.error("Error fetching report:", supabaseError)
       return NextResponse.json({ error: "Failed to fetch report" }, { status: 500 })
     }
 

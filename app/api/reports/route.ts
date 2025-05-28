@@ -1,7 +1,14 @@
-import { NextResponse } from "next/server"
+import { NextResponse, NextRequest } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabase"
+import { requireAuth } from "@/lib/requireAuth"
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  // Validate JWT
+  const { user, error } = await requireAuth(request)
+  if (error) {
+    return NextResponse.json({ error }, { status: 401 })
+  }
+
   try {
     const { companyName, companyWebsite, jobDescription, userId } = await request.json()
 
@@ -110,7 +117,7 @@ export async function POST(request: Request) {
 
     // Simulate report generation (this would be a background job in production)
     setTimeout(async () => {
-      const reportData = {
+      const simulatedReportData = {
         basics: {
           founded: "2015",
           headquarters: "San Francisco, CA",
@@ -166,7 +173,7 @@ export async function POST(request: Request) {
         .from("reports")
         .update({
           status: "completed",
-          data: reportData,
+          data: simulatedReportData,
           summary: summary,
         })
         .eq("id", reportData.id)
