@@ -12,6 +12,7 @@ import { getSupabaseClient } from "@/lib/supabase"
 import { useRouter } from "next/navigation"
 import BackgroundBlobs from "@/components/BackgroundBlobs"
 import { SparklesText } from "@/components/ui/sparkles-text"
+import Image from "next/image"
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
@@ -53,8 +54,8 @@ export default function Home() {
           {/* Left: Logo */}
           <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center">
-              <div className="h-8 w-8 rounded-md bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] flex items-center justify-center mr-2">
-                <LightningBoltIcon className="h-5 w-5 text-white" />
+              <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center mr-2 shadow-lg border border-gray-200">
+                <Image src="/logo.png" alt="Logo" width={40} height={40} className="h-10 w-10 object-contain" />
               </div>
               <span className="text-xl font-bold text-gray-900">InterviewIQ</span>
             </div>
@@ -96,9 +97,9 @@ export default function Home() {
         {/* Hero Section */}
         <div className="flex-1 flex flex-col justify-center">
           <div className="text-center pt-12 pb-6 md:pt-20 md:pb-10">
-            <div className="animate-pulse-slow inline-flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-r from-[#4B6EF5]/10 to-[#8C52FF]/10 mb-6">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] flex items-center justify-center">
-                <LightningBoltIcon className="h-6 w-6 text-white" />
+            <div className="animate-pulse-slow inline-flex items-center justify-center h-20 w-20 rounded-full bg-white mb-6 shadow-lg border border-gray-200">
+              <div className="h-14 w-14 rounded-full flex items-center justify-center">
+                <Image src="/logo.png" alt="Logo" width={56} height={56} className="h-14 w-14 object-contain" />
               </div>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">InterviewIQ</h1>
@@ -110,8 +111,8 @@ export default function Home() {
             <div className="relative max-w-3xl mx-auto mb-8 rounded-lg overflow-hidden shadow-2xl">
               <div className="aspect-video bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center">
                 <div className="text-center">
-                  <div className="animate-pulse-slow inline-flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-r from-[#4B6EF5]/20 to-[#8C52FF]/20 mb-4">
-                    <LightningBoltIcon className="h-8 w-8 text-white" />
+                  <div className="animate-pulse-slow inline-flex items-center justify-center h-20 w-20 rounded-full bg-white mb-4 shadow-lg border border-gray-200">
+                    <Image src="/logo.png" alt="Logo" width={48} height={48} className="h-12 w-12 object-contain" />
                   </div>
                   <p className="text-white text-lg">See InterviewIQ in action</p>
                 </div>
@@ -225,7 +226,9 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 transform-gpu">
               <div className="flex items-center mb-4">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] flex items-center justify-center text-white font-bold">JD</div>
+                <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center mr-2 shadow-lg border border-gray-200">
+                  <Image src="/logo.png" alt="Logo" width={40} height={40} className="h-10 w-10 object-contain" />
+                </div>
                 <div className="ml-4">
                   <h3 className="font-semibold">John Doe</h3>
                   <p className="text-sm text-gray-600">Software Engineer</p>
@@ -235,7 +238,9 @@ export default function Home() {
             </div>
             <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 transform-gpu">
               <div className="flex items-center mb-4">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] flex items-center justify-center text-white font-bold">AS</div>
+                <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center mr-2 shadow-lg border border-gray-200">
+                  <Image src="/logo.png" alt="Logo" width={40} height={40} className="h-10 w-10 object-contain" />
+                </div>
                 <div className="ml-4">
                   <h3 className="font-semibold">Alice Smith</h3>
                   <p className="text-sm text-gray-600">Product Manager</p>
@@ -262,8 +267,8 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center mb-4 md:mb-0">
-              <div className="h-8 w-8 rounded-md bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] flex items-center justify-center mr-2">
-                <LightningBoltIcon className="h-5 w-5 text-white" />
+              <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center mr-2 shadow-lg border border-gray-200">
+                <Image src="/logo.png" alt="Logo" width={40} height={40} className="h-10 w-10 object-contain" />
               </div>
               <span className="text-xl font-bold text-gray-900">InterviewIQ</span>
             </div>
