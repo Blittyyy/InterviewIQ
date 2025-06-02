@@ -49,8 +49,8 @@ export default function WaitlistCounter() {
   }
 
   return (
-    <div className="text-sm text-gray-500 mt-2">
-      <span className="font-medium text-[#4B6EF5]">{count}+</span> people on the waitlist
+    <div className="text-base text-[#4B6EF5] font-semibold mt-3 text-center">
+      <span className="text-2xl font-bold">{count}+</span> people on the waitlist
     </div>
   )
 }

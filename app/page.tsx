@@ -49,15 +49,15 @@ export default function Home() {
       <div className="hidden md:block absolute bottom-0 left-1/2 w-[22rem] h-[12rem] bg-gradient-to-tr from-blue-400/10 via-purple-400/20 to-teal-300/10 rounded-full blur-3xl z-0 pointer-events-none" />
 
       {/* Navigation */}
-      <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-gray-100 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex items-center justify-between h-16 relative">
+      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg bg-white/90 border-b border-gray-100 shadow-sm">
+        <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
           {/* Left: Logo */}
           <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center">
               <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center mr-2 shadow-lg border border-gray-200">
                 <Image src="/logo.png" alt="Logo" width={40} height={40} className="h-10 w-10 object-contain" />
               </div>
-              <span className="text-xl font-bold text-gray-900">InterviewIQ</span>
+              <span className="text-xl font-bold text-gray-900">Interview<span className="bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] bg-clip-text text-transparent">IQ</span></span>
             </div>
           </div>
           {/* Center: Pricing */}
@@ -102,10 +102,9 @@ export default function Home() {
                 <Image src="/logo.png" alt="Logo" width={56} height={56} className="h-14 w-14 object-contain" />
               </div>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">InterviewIQ</h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-              Generate smart, personalized company research reports to ace your job interviews.
-            </p>
+            <h1 className="text-5xl font-bold text-center text-gray-900">Interview<span className="bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] bg-clip-text text-transparent">IQ</span></h1>
+            <h2 className="text-xl text-gray-700 font-medium mt-2 text-center">The AI-powered prep tool for job seekers</h2>
+            <p className="text-base text-gray-500 max-w-xl mx-auto mt-2 text-center mb-8">Generate company insights, culture breakdowns, and talking points tailored to your resume.</p>
 
             {/* Demo Preview */}
             <div className="relative max-w-3xl mx-auto mb-8 rounded-lg overflow-hidden shadow-2xl">
@@ -222,9 +221,9 @@ export default function Home() {
 
         {/* Testimonials Section */}
         <div className="max-w-4xl mx-auto mb-16">
-          <h2 className="text-2xl font-bold text-center mb-8">Trusted by Job Seekers</h2>
+          <h2 className="text-2xl font-bold text-center mb-8">Trusted by job seekers. <span className='text-gray-500'>(Well, it will be.)</span></h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 transform-gpu">
+            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 transform-gpu relative">
               <div className="flex items-center mb-4">
                 <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center mr-2 shadow-lg border border-gray-200">
                   <Image src="/logo.png" alt="Logo" width={40} height={40} className="h-10 w-10 object-contain" />
@@ -235,8 +234,9 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-gray-700">"InterviewIQ helped me prepare for my dream job at Google. The company insights were spot-on and the talking points were incredibly helpful!"</p>
+              <span className="absolute bottom-4 right-4 text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full border border-gray-200">Sample</span>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 transform-gpu">
+            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 transform-gpu relative">
               <div className="flex items-center mb-4">
                 <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center mr-2 shadow-lg border border-gray-200">
                   <Image src="/logo.png" alt="Logo" width={40} height={40} className="h-10 w-10 object-contain" />
@@ -247,12 +247,13 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-gray-700">"The culture insights were invaluable. I was able to align my experience with the company's values and got the job!"</p>
+              <span className="absolute bottom-4 right-4 text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full border border-gray-200">Sample</span>
             </div>
           </div>
         </div>
 
         {/* Main Form Section */}
-        <div id="generate-report" className="max-w-3xl mx-auto mb-4">
+        <div id="generate-report" className="max-w-5xl w-full mx-auto mb-8">
           <ReportForm />
         </div>
 
@@ -270,7 +271,7 @@ export default function Home() {
               <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center mr-2 shadow-lg border border-gray-200">
                 <Image src="/logo.png" alt="Logo" width={40} height={40} className="h-10 w-10 object-contain" />
               </div>
-              <span className="text-xl font-bold text-gray-900">InterviewIQ</span>
+              <span className="text-xl font-bold text-gray-900">Interview<span className="bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] bg-clip-text text-transparent">IQ</span></span>
             </div>
             <div className="text-sm text-gray-500">© {new Date().getFullYear()} InterviewIQ. All rights reserved.</div>
           </div>

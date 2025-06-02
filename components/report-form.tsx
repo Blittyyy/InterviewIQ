@@ -80,7 +80,7 @@ export default function ReportForm() {
   }
 
   return (
-    <Card className="p-6 shadow-lg border-0 bg-white">
+    <Card className="max-w-2xl mx-auto p-8 md:p-10 shadow-lg border-0 bg-white">
       <h2 className="text-2xl font-bold text-center mb-6">Generate your report</h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
