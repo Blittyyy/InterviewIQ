@@ -1,8 +1,56 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { CheckIcon } from "lucide-react"
+import { CheckIcon, Loader2Icon } from "lucide-react"
+import { useState } from "react"
+import { STRIPE_PRODUCTS } from "@/src/stripe-config"
+import { getSupabaseClient } from "@/lib/supabase"
 
 export default function PricingSection() {
+  const [isLoading, setIsLoading] = useState<string | null>(null)
+
+  const handleCheckout = async (productId: keyof typeof STRIPE_PRODUCTS) => {
+    try {
+      setIsLoading(productId)
+      const product = STRIPE_PRODUCTS[productId]
+      
+      const supabase = getSupabaseClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (!session) {
+        window.location.href = "/login"
+        return
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/stripe-checkout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          price_id: product.priceId,
+          success_url: `${window.location.origin}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${window.location.origin}/pricing`,
+          mode: product.mode,
+        }),
+      })
+
+      const { url, error } = await response.json()
+      
+      if (error) {
+        throw new Error(error)
+      }
+
+      if (url) {
+        window.location.href = url
+      }
+    } catch (error) {
+      console.error("Error creating checkout session:", error)
+    } finally {
+      setIsLoading(null)
+    }
+  }
+
   return (
     <div className="py-12">
       <div className="text-center mb-12">
@@ -73,8 +121,17 @@ export default function PricingSection() {
             </ul>
           </CardContent>
           <CardFooter>
-            <Button variant="outline" className="w-full">
-              Buy Day Pass
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => handleCheckout("dayPass")}
+              disabled={isLoading === "dayPass"}
+            >
+              {isLoading === "dayPass" ? (
+                <Loader2Icon className="h-4 w-4 animate-spin" />
+              ) : (
+                "Buy Day Pass"
+              )}
             </Button>
           </CardFooter>
         </Card>
@@ -111,8 +168,16 @@ export default function PricingSection() {
             </ul>
           </CardContent>
           <CardFooter>
-            <Button className="w-full bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] hover:shadow-md transition-all">
-              Subscribe to Pro
+            <Button 
+              className="w-full bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] hover:shadow-md transition-all"
+              onClick={() => handleCheckout("pro")}
+              disabled={isLoading === "pro"}
+            >
+              {isLoading === "pro" ? (
+                <Loader2Icon className="h-4 w-4 animate-spin" />
+              ) : (
+                "Subscribe to Pro"
+              )}
             </Button>
           </CardFooter>
         </Card>
