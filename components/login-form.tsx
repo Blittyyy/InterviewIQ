@@ -44,7 +44,26 @@ export default function LoginForm() {
       }
 
       if (data?.session) {
-        router.refresh()
+        // Ensure user exists in database
+        const { data: userData, error: userError } = await supabase
+          .from("users")
+          .select("id")
+          .eq("id", data.session.user.id)
+          .single()
+
+        if (!userData) {
+          // Create user if they don't exist
+          await supabase.from("users").insert([
+            {
+              id: data.session.user.id,
+              email: data.session.user.email,
+              subscription_status: "free",
+              reports_generated: 0,
+              daily_reports_count: 0,
+            },
+          ])
+        }
+
         router.push("/dashboard")
       }
     } catch (err) {
