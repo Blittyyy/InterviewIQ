@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { MailIcon, LockIcon, AlertCircle } from "lucide-react"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 export default function LoginForm() {
   const [email, setEmail] = useState("")
@@ -21,7 +21,7 @@ export default function LoginForm() {
     setIsSubmitting(true)
 
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClientComponentClient()
 
       // Validate email format
       if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
@@ -34,45 +34,19 @@ export default function LoginForm() {
       }
 
       // Sign in the user
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (signInError) {
-        if (signInError.message.includes("Invalid login credentials")) {
-          throw new Error("Invalid email or password")
-        }
         throw signInError
       }
 
-      // After successful login, ensure user row exists
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      const userId = session?.user?.id
-      const userEmail = session?.user?.email
-      if (userId && userEmail) {
-        const { data: userData } = await supabase
-          .from("users")
-          .select("id")
-          .eq("id", userId)
-          .single()
-        if (!userData) {
-          await supabase.from("users").insert([
-            {
-              id: userId,
-              email: userEmail,
-              plan: "free",
-              reports_generated: 0,
-              daily_reports_count: 0,
-            },
-          ])
-        }
+      if (data?.session) {
+        router.refresh()
+        router.push("/dashboard")
       }
-
-      // Redirect to dashboard
-      router.push("/dashboard")
     } catch (err) {
       console.error("Login error:", err)
       setError(err instanceof Error ? err.message : "Failed to log in")
@@ -146,4 +120,4 @@ export default function LoginForm() {
       </Card>
     </div>
   )
-} 
+}

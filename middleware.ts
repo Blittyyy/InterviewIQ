@@ -1,12 +1,16 @@
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { rateLimit } from './lib/rate-limit'
 
 export async function middleware(request: NextRequest) {
-  const ip =
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    'unknown'
+  const res = NextResponse.next()
+  const supabase = createMiddlewareClient({ req: request, res })
 
+  // Refresh session if expired
+  await supabase.auth.getSession()
+
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
   const { pathname } = request.nextUrl
 
   // Rate limit rules
@@ -30,9 +34,13 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next()
+  return res
 }
 
 export const config = {
-  matcher: ['/api/waitlist', '/api/waitlist/count'],
-} 
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/api/waitlist',
+    '/api/waitlist/count'
+  ],
+}

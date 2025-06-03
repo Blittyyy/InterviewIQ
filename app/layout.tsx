@@ -2,23 +2,27 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
+import { cookies } from "next/headers"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "InterviewIQ - AI-Powered Interview Preparation",
   description: "Generate smart, personalized company research reports to ace your job interviews.",
-    generator: 'v0.dev'
+  generator: 'v0.dev'
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const supabase = createServerComponentClient({ cookies })
+  
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>{children}</body>
+      <body className={inter.className}>{children}</body>
     </html>
   )
 }
