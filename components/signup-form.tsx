@@ -52,15 +52,8 @@ export default function SignupForm() {
         return
       }
 
-      // If not, try to sign in immediately
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-      if (signInError) {
-        throw signInError
-      }
-      router.push("/")
+      // If no session, redirect to confirm email page
+      router.push("/confirm-email")
     } catch (err) {
       console.error("Signup error:", err)
       setError(err instanceof Error ? err.message : "Failed to create account")

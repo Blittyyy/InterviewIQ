@@ -35,19 +35,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F4F7FE] to-white relative overflow-hidden">
-      <BackgroundBlobs />
-      {/* Colorful background blobs */}
-      <div className="hidden md:block absolute -top-32 -left-32 w-[38rem] h-[38rem] bg-gradient-to-br from-purple-400/30 via-blue-400/20 to-teal-300/10 rounded-full blur-3xl z-0 pointer-events-none" />
-      <div className="hidden md:block absolute top-1/3 left-1/2 w-[32rem] h-[24rem] bg-gradient-to-tr from-blue-400/20 via-purple-400/10 to-teal-300/10 rounded-full blur-2xl z-0 pointer-events-none" />
-      <div className="hidden md:block absolute bottom-0 right-0 w-[28rem] h-[28rem] bg-gradient-to-tl from-teal-300/30 via-blue-400/10 to-purple-400/10 rounded-full blur-3xl z-0 pointer-events-none" />
-      <div className="hidden md:block absolute bottom-1/4 left-0 w-[20rem] h-[20rem] bg-gradient-to-tr from-purple-400/20 via-blue-400/10 to-teal-300/10 rounded-full blur-2xl z-0 pointer-events-none" />
-      {/* Additional blobs for richer effect */}
-      <div className="hidden md:block absolute top-0 right-1/3 w-[18rem] h-[18rem] bg-gradient-to-br from-blue-400/20 via-teal-300/10 to-purple-400/10 rounded-full blur-2xl z-0 pointer-events-none" />
-      <div className="hidden md:block absolute bottom-1/2 right-0 w-[16rem] h-[24rem] bg-gradient-to-tl from-purple-400/10 via-blue-400/20 to-teal-300/10 rounded-full blur-3xl z-0 pointer-events-none" />
-      <div className="hidden md:block absolute top-1/4 left-1/4 w-[14rem] h-[14rem] bg-gradient-to-br from-teal-300/20 via-blue-400/10 to-purple-400/10 rounded-full blur-2xl z-0 pointer-events-none" />
-      <div className="hidden md:block absolute bottom-0 left-1/2 w-[22rem] h-[12rem] bg-gradient-to-tr from-blue-400/10 via-purple-400/20 to-teal-300/10 rounded-full blur-3xl z-0 pointer-events-none" />
-
+    <div className="min-h-screen relative overflow-hidden">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg bg-white/90 border-b border-gray-100 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
