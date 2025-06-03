@@ -6,8 +6,25 @@ import { Database } from "@/types/supabase"
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-if (!supabaseUrl) throw new Error("Missing environment variable: NEXT_PUBLIC_SUPABASE_URL")
-if (!supabaseAnonKey) throw new Error("Missing environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY")
+// Enhanced validation to ensure URLs are properly formatted
+const isValidUrl = (urlString: string) => {
+  try {
+    new URL(urlString)
+    return true
+  } catch (e) {
+    return false
+  }
+}
+
+if (!supabaseUrl || !isValidUrl(supabaseUrl)) {
+  console.error("Invalid or missing NEXT_PUBLIC_SUPABASE_URL. Please check your environment variables.")
+  throw new Error("Invalid or missing NEXT_PUBLIC_SUPABASE_URL")
+}
+
+if (!supabaseAnonKey) {
+  console.error("Missing NEXT_PUBLIC_SUPABASE_ANON_KEY. Please check your environment variables.")
+  throw new Error("Missing NEXT_PUBLIC_SUPABASE_ANON_KEY")
+}
 
 // Create a singleton instance for the client-side Supabase client
 let supabaseClient: ReturnType<typeof createClientComponentClient<Database>> | null = null
@@ -18,7 +35,12 @@ let supabaseClient: ReturnType<typeof createClientComponentClient<Database>> | n
  */
 export const getSupabaseClient = () => {
   if (!supabaseClient) {
-    supabaseClient = createClientComponentClient<Database>()
+    try {
+      supabaseClient = createClientComponentClient<Database>()
+    } catch (error) {
+      console.error("Failed to create Supabase client:", error)
+      throw new Error("Failed to initialize Supabase client")
+    }
   }
   return supabaseClient
 }
@@ -33,12 +55,17 @@ export const createServerSupabaseClient = () => {
     throw new Error("Missing environment variable: SUPABASE_SERVICE_ROLE_KEY")
   }
   
-  return createClient<Database>(supabaseUrl, supabaseServiceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  })
+  try {
+    return createClient<Database>(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    })
+  } catch (error) {
+    console.error("Failed to create server Supabase client:", error)
+    throw new Error("Failed to initialize server Supabase client")
+  }
 }
 
 /**
@@ -46,5 +73,10 @@ export const createServerSupabaseClient = () => {
  * This can be used in both client and server contexts where public access is needed.
  */
 export const createPublicSupabaseClient = () => {
-  return createClient<Database>(supabaseUrl, supabaseAnonKey)
+  try {
+    return createClient<Database>(supabaseUrl, supabaseAnonKey)
+  } catch (error) {
+    console.error("Failed to create public Supabase client:", error)
+    throw new Error("Failed to initialize public Supabase client")
+  }
 }
