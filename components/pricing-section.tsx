@@ -1,8 +1,31 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { CheckIcon } from "lucide-react"
+import { useEffect, useState } from "react"
+import { getSupabaseClient } from "@/lib/supabase"
+import { useRouter } from "next/navigation"
 
 export default function PricingSection() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+  const router = useRouter()
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = getSupabaseClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      setIsAuthenticated(!!session)
+    }
+    checkAuth()
+  }, [])
+
+  const handleFreeGetStarted = () => {
+    if (isAuthenticated) {
+      router.push("/dashboard")
+    } else {
+      router.push("/signup")
+    }
+  }
+
   return (
     <div className="py-12">
       <div className="text-center mb-12">
@@ -40,7 +63,7 @@ export default function PricingSection() {
             </ul>
           </CardContent>
           <CardFooter>
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full" onClick={handleFreeGetStarted}>
               Get Started
             </Button>
           </CardFooter>

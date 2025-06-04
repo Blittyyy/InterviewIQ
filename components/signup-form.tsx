@@ -63,7 +63,7 @@ export default function SignupForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#F4F7FE] to-white relative overflow-hidden">
+    <div className="flex items-center justify-center w-full min-h-screen">
       <Card className="w-full max-w-md p-6 space-y-6 bg-white shadow-lg rounded-xl">
         <div className="text-center space-y-2">
           <h2 className="text-2xl font-bold text-gray-900">Create an Account</h2>

@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation"
 import BackgroundBlobs from "@/components/BackgroundBlobs"
 import { SparklesText } from "@/components/ui/sparkles-text"
 import Image from "next/image"
+import { WavyBackground } from "@/components/ui/wavy-background"
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
@@ -35,7 +36,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <WavyBackground backgroundFill="#fff" blur={20} waveOpacity={0.15} className="relative z-10">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg bg-white/90 border-b border-gray-100 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
@@ -81,7 +82,7 @@ export default function Home() {
         </div>
       </nav>
 
-      <main className="flex flex-col min-h-[calc(100vh-4rem)] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+      <main className="flex flex-col min-h-[calc(100vh-4rem)] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 pt-20">
         {/* Hero Section */}
         <div className="flex-1 flex flex-col justify-center">
           <div className="text-center pt-12 pb-6 md:pt-20 md:pb-10">
@@ -265,6 +266,6 @@ export default function Home() {
           </div>
         </div>
       </footer>
-    </div>
+    </WavyBackground>
   )
 }
