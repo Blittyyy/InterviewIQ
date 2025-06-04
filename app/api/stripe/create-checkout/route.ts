@@ -25,6 +25,12 @@ export async function POST(request: Request) {
       return new NextResponse("Unauthorized", { status: 401 })
     }
 
+    // Determine mode based on priceId
+    let mode: "payment" | "subscription" = "subscription"
+    if (priceId === process.env.STRIPE_DAY_PASS_PRICE_ID) {
+      mode = "payment"
+    }
+
     // Create Stripe checkout session
     const checkoutSession = await stripe.checkout.sessions.create({
       customer_email: session.user.email,
@@ -34,7 +40,7 @@ export async function POST(request: Request) {
           quantity: 1,
         },
       ],
-      mode: "subscription",
+      mode,
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
       metadata: {
