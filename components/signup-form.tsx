@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { MailIcon, LockIcon, AlertCircle } from "lucide-react"
 import { getSupabaseClient } from "@/lib/supabase"
+import { FcGoogle } from "react-icons/fc"
 
 export default function SignupForm() {
   const [email, setEmail] = useState("")
@@ -69,6 +70,26 @@ export default function SignupForm() {
           <h2 className="text-2xl font-bold text-gray-900">Create an Account</h2>
           <p className="text-gray-600">Join InterviewIQ to get started</p>
         </div>
+
+        {/* Google Auth Button */}
+        <Button
+          type="button"
+          className="w-full flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+          onClick={async () => {
+            const supabase = getSupabaseClient()
+            await supabase.auth.signInWithOAuth({
+              provider: "google",
+              options: {
+                redirectTo: typeof window !== "undefined"
+                  ? `${window.location.origin}/dashboard`
+                  : undefined,
+              },
+            })
+          }}
+        >
+          <FcGoogle className="h-5 w-5" />
+          Sign up with Google
+        </Button>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">

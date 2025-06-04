@@ -150,7 +150,13 @@ export default function PricingSection() {
                 <Button
                   className={`w-full bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] text-white hover:shadow-lg`}
                   disabled={loading === plan.priceId}
-                  onClick={() => plan.priceId && handleCheckout(plan.priceId)}
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      router.push("/signup")
+                    } else if (plan.priceId) {
+                      handleCheckout(plan.priceId)
+                    }
+                  }}
                 >
                   {loading === plan.priceId ? (
                     <Loader2Icon className="h-4 w-4 animate-spin" />
