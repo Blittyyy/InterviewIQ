@@ -9,12 +9,14 @@ import { Card } from "@/components/ui/card"
 import { CheckIcon, MailIcon } from "lucide-react"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import WaitlistCounter from "./waitlist-counter"
+import { ButtonColorful } from "@/components/ui/button-colorful"
 
 interface WaitlistFormProps {
   compact?: boolean
+  isAuthenticated?: boolean
 }
 
-export default function WaitlistForm({ compact = false }: WaitlistFormProps) {
+export default function WaitlistForm({ compact = false, isAuthenticated = true }: WaitlistFormProps) {
   const [email, setEmail] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
@@ -86,13 +88,17 @@ export default function WaitlistForm({ compact = false }: WaitlistFormProps) {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <Button
-              type="submit"
-              className={`bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] text-white ${compact ? "text-sm py-1 h-9" : ""}`}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Joining..." : "Join Waitlist"}
-            </Button>
+            {isAuthenticated ? (
+              <Button
+                type="submit"
+                className={`bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] text-white ${compact ? "text-sm py-1 h-9" : ""}`}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Joining..." : "Join Waitlist"}
+              </Button>
+            ) : (
+              <ButtonColorful label="Join Waitlist" className={compact ? "text-sm py-1 h-9" : undefined} />
+            )}
           </div>
           {error && <p className="text-red-500 text-xs">{error}</p>}
         </form>

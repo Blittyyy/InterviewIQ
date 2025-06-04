@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import { ButtonColorful } from "@/components/ui/button-colorful"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { CheckIcon, Loader2Icon } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -108,65 +109,64 @@ export default function PricingSection() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
         {plans.map((plan, idx) => (
-          <Card
+          <div
             key={plan.name}
-            className={`border shadow-sm hover:shadow-xl hover:scale-105 transition-all duration-300 transform-gpu ${plan.name === "Pro" ? "border-2 border-[#4B6EF5] shadow-md relative overflow-hidden" : "border-gray-200"}`}
+            className="group will-change-transform transform-gpu transition-transform duration-300 hover:-translate-y-1 [backface-visibility:hidden] translate-z-0"
           >
-            {plan.name === "Pro" && (
-              <div className="absolute top-0 right-0 bg-[#4B6EF5] text-white text-xs font-bold py-1 px-3 rounded-bl-md">
-                POPULAR
-              </div>
-            )}
-            <CardHeader className="pb-4">
-              <CardTitle className="text-xl">{plan.name}</CardTitle>
-              <div className="mt-2">
-                <span className="text-3xl font-bold">{plan.price}</span>
-                <span className="text-gray-500 ml-1">{plan.period}</span>
-              </div>
-              <CardDescription className="mt-2">
-                {plan.name === "Free"
-                  ? "Perfect for occasional interviews"
-                  : plan.name === "Day Pass"
-                  ? "For when you need a quick boost"
-                  : "For serious job seekers"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-3">
-                {plan.features.map((feature, index) => (
-                  <li key={index} className="flex items-start">
-                    <CheckIcon className="h-5 w-5 text-[#4B6EF5] mr-2 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-600 text-sm">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-            <CardFooter>
-              {plan.type === "free" ? (
-                <Button variant="outline" className="w-full" onClick={handleFreeGetStarted}>
-                  {plan.buttonText}
-                </Button>
-              ) : (
-                <Button
-                  className={`w-full bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] text-white hover:shadow-lg`}
-                  disabled={loading === plan.priceId}
-                  onClick={() => {
-                    if (!isAuthenticated) {
-                      router.push("/signup")
-                    } else if (plan.priceId) {
-                      handleCheckout(plan.priceId)
-                    }
-                  }}
-                >
-                  {loading === plan.priceId ? (
-                    <Loader2Icon className="h-4 w-4 animate-spin" />
-                  ) : (
-                    plan.buttonText
-                  )}
-                </Button>
+            <Card
+              className={`border shadow-sm group-hover:shadow-xl transition-colors duration-300 ${plan.name === "Pro" ? "border-2 border-[#4B6EF5] shadow-md relative overflow-hidden" : "border-gray-200"}`}
+            >
+              {plan.name === "Pro" && (
+                <div className="absolute top-0 right-0 bg-[#4B6EF5] text-white text-xs font-bold py-1 px-3 rounded-bl-md">
+                  POPULAR
+                </div>
               )}
-            </CardFooter>
-          </Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl">{plan.name}</CardTitle>
+                <div className="mt-2">
+                  <span className="text-3xl font-bold">{plan.price}</span>
+                  <span className="text-gray-500 ml-1">{plan.period}</span>
+                </div>
+                <CardDescription className="mt-2">
+                  {plan.name === "Free"
+                    ? "Perfect for occasional interviews"
+                    : plan.name === "Day Pass"
+                    ? "For when you need a quick boost"
+                    : "For serious job seekers"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  {plan.features.map((feature, index) => (
+                    <li key={index} className="flex items-start">
+                      <CheckIcon className="h-5 w-5 text-[#4B6EF5] mr-2 flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-600 text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+              <CardFooter>
+                {plan.type === "free" ? (
+                  <Button variant="outline" className="w-full hover:bg-gray-200 transition-all" onClick={handleFreeGetStarted}>
+                    {plan.buttonText}
+                  </Button>
+                ) : (
+                  <ButtonColorful
+                    label={plan.buttonText}
+                    className="w-full"
+                    disabled={loading === plan.priceId}
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        router.push("/signup")
+                      } else if (plan.priceId) {
+                        handleCheckout(plan.priceId)
+                      }
+                    }}
+                  />
+                )}
+              </CardFooter>
+            </Card>
+          </div>
         ))}
       </div>
     </div>

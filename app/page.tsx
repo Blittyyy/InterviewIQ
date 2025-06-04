@@ -14,6 +14,7 @@ import BackgroundBlobs from "@/components/BackgroundBlobs"
 import { SparklesText } from "@/components/ui/sparkles-text"
 import Image from "next/image"
 import { WavyBackground } from "@/components/ui/wavy-background"
+import { ButtonColorful } from "@/components/ui/button-colorful"
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
@@ -36,236 +37,236 @@ export default function Home() {
   }
 
   return (
-    <WavyBackground backgroundFill="#fff" blur={20} waveOpacity={0.15} className="relative z-10">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg bg-white/90 border-b border-gray-100 shadow-sm">
-        <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-          {/* Left: Logo */}
-          <div className="flex items-center">
-            <div className="flex-shrink-0 flex items-center">
-              <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center mr-2 shadow-lg border border-gray-200">
-                <Image src="/logo.png" alt="Logo" width={40} height={40} className="h-10 w-10 object-contain" />
-              </div>
-              <span className="text-xl font-bold text-gray-900">Interview<span className="bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] bg-clip-text text-transparent">IQ</span></span>
-            </div>
-          </div>
-          {/* Center: Pricing */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <a href="#pricing" className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium flex items-center">
-              <SparklesText text="Pricing" className="text-base" sparklesCount={8} />
-            </a>
-          </div>
-          {/* Right: Action buttons */}
-          <div className="flex items-center gap-2">
-            {isAuthenticated === null ? null : isAuthenticated ? (
-              <>
-                <a href="#generate-report" className="block">
-                  <Button className="bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] text-white hover:shadow-lg transition-all w-full">
-                    <span className="mr-1">+</span> New Report
-                  </Button>
-                </a>
-                <Button variant="ghost" onClick={handleLogout} className="transition-all">
-                  Log Out
-                </Button>
-              </>
-            ) : (
-              <>
-                <a href="/login">
-                  <Button variant="ghost" className="hover:bg-gray-100 transition-all">Login</Button>
-                </a>
-                <a href="/signup">
-                  <Button className="bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] text-white shadow-md hover:shadow-lg transition-all">Sign Up</Button>
-                </a>
-              </>
-            )}
-          </div>
-        </div>
-      </nav>
-
-      <main className="flex flex-col min-h-[calc(100vh-4rem)] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 pt-20">
-        {/* Hero Section */}
-        <div className="flex-1 flex flex-col justify-center">
-          <div className="text-center pt-12 pb-6 md:pt-20 md:pb-10">
-            <div className="animate-pulse-slow inline-flex items-center justify-center h-20 w-20 rounded-full bg-white mb-6 shadow-lg border border-gray-200">
-              <div className="h-14 w-14 rounded-full flex items-center justify-center">
-                <Image src="/logo.png" alt="Logo" width={56} height={56} className="h-14 w-14 object-contain" />
-              </div>
-            </div>
-            <h1 className="text-5xl font-bold text-center text-gray-900">Interview<span className="bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] bg-clip-text text-transparent">IQ</span></h1>
-            <h2 className="text-xl text-gray-700 font-medium mt-2 text-center">The AI-powered prep tool for job seekers</h2>
-            <p className="text-base text-gray-500 max-w-xl mx-auto mt-2 text-center mb-8">Generate company insights, culture breakdowns, and talking points tailored to your resume.</p>
-
-            {/* Demo Preview */}
-            <div className="relative max-w-3xl mx-auto mb-8 rounded-lg overflow-hidden shadow-2xl">
-              <div className="aspect-video bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="animate-pulse-slow inline-flex items-center justify-center h-20 w-20 rounded-full bg-white mb-4 shadow-lg border border-gray-200">
-                    <Image src="/logo.png" alt="Logo" width={48} height={48} className="h-12 w-12 object-contain" />
+    <>
+      <div className="max-w-7xl mx-auto">
+        <WavyBackground backgroundFill="#fff" blur={20} waveOpacity={0.15} className="relative z-10">
+          {/* Navigation */}
+          <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg bg-white/90 border-b border-gray-100 shadow-sm">
+            <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+              {/* Left: Logo */}
+              <div className="flex items-center">
+                <div className="flex-shrink-0 flex items-center">
+                  <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center mr-2 shadow-lg border border-gray-200">
+                    <Image src="/logo.png" alt="Logo" width={40} height={40} className="h-10 w-10 object-contain" />
                   </div>
-                  <p className="text-white text-lg">Demo not released yet.</p>
+                  <span className="text-xl font-bold text-gray-900">Interview<span className="bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] bg-clip-text text-transparent">IQ</span></span>
                 </div>
               </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+              {/* Center: Pricing */}
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                <a href="#pricing" className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                  <SparklesText text="Pricing" className="text-base" sparklesCount={8} />
+                </a>
+              </div>
+              {/* Right: Action buttons */}
+              <div className="flex items-center gap-2">
+                {isAuthenticated === null ? null : isAuthenticated ? (
+                  <>
+                    <a href="#generate-report" className="block">
+                      <ButtonColorful label={"New Report"} className="w-full" />
+                    </a>
+                    <Button variant="ghost" onClick={handleLogout} className="transition-all">
+                      Log Out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <a href="/login">
+                      <Button variant="ghost" className="hover:bg-gray-200 transition-all">Login</Button>
+                    </a>
+                    <a href="/signup">
+                      {isAuthenticated === false && (
+                        <ButtonColorful label="Sign Up" />
+                      )}
+                    </a>
+                  </>
+                )}
+              </div>
             </div>
+          </nav>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-              <a href={isAuthenticated ? "/dashboard" : "/signup"}>
-                <Button className="bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] text-white px-8 py-6 text-lg hover:shadow-lg transition-all w-full sm:w-auto">
-                  {isAuthenticated ? "Go to Dashboard" : "Get Started Free"}
-                </Button>
-              </a>
-              <Button variant="outline" className="px-8 py-6 text-lg hover:bg-gray-50 transition-all w-full sm:w-auto">
-                Watch Demo
-              </Button>
-            </div>
-
-            {/* Feature Tags */}
-            <div className="flex flex-wrap justify-center gap-3 mb-6">
-              <Badge
-                variant="outline"
-                className="py-2 px-4 bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all"
-              >
-                <span className="h-2 w-2 rounded-full bg-[#4B6EF5] mr-2"></span>
-                Company Insights
-              </Badge>
-              <Badge
-                variant="outline"
-                className="py-2 px-4 bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all"
-              >
-                <span className="h-2 w-2 rounded-full bg-[#8C52FF] mr-2"></span>
-                Culture & Values
-              </Badge>
-              <Badge
-                variant="outline"
-                className="py-2 px-4 bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all"
-              >
-                <span className="h-2 w-2 rounded-full bg-[#10F2C5] mr-2"></span>
-                Personalized Talking Points
-              </Badge>
-            </div>
-
-            {/* Waitlist Section - Moved here and made more compact */}
-            <div className="max-w-md mx-auto mt-4 mb-2">
-              <WaitlistForm compact={true} />
-            </div>
-          </div>
-        </div>
-
-        {/* Statistics Section */}
-        <div className="max-w-4xl mx-auto mb-16">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div className="p-4">
-              <div className="text-3xl font-bold text-[#4B6EF5] mb-2">10k+</div>
-              <div className="text-sm text-gray-600">Reports Generated</div>
-            </div>
-            <div className="p-4">
-              <div className="text-3xl font-bold text-[#8C52FF] mb-2">95%</div>
-              <div className="text-sm text-gray-600">Success Rate</div>
-            </div>
-            <div className="p-4">
-              <div className="text-3xl font-bold text-[#10F2C5] mb-2">500+</div>
-              <div className="text-sm text-gray-600">Companies Analyzed</div>
-            </div>
-            <div className="p-4">
-              <div className="text-3xl font-bold text-[#4B6EF5] mb-2">24/7</div>
-              <div className="text-sm text-gray-600">Support Available</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-          <FeatureCard
-            icon="building"
-            title="Company Basics"
-            description="Founding year, HQ, CEO, size, and mission pulled from company site/about pages."
-          />
-          <FeatureCard
-            icon="package"
-            title="Products & Services"
-            description="Structured bullets summarizing what the company offers using AI."
-          />
-          <FeatureCard
-            icon="newspaper"
-            title="Recent News & Press"
-            description="Top 3–5 headlines with title, link, source, and publish date."
-          />
-          <FeatureCard
-            icon="users"
-            title="Culture & Values"
-            description="Insights from Careers pages, Glassdoor, and social profiles."
-          />
-          <FeatureCard
-            icon="message-square"
-            title="Talking Points Generator"
-            description="3–5 strategic interview questions based on company data and role."
-          />
-          <FeatureCard
-            icon="file-text"
-            title="Resume Upload"
-            description="Upload your resume to tailor talking points and role alignment."
-          />
-        </div>
-
-        {/* Testimonials Section */}
-        <div className="max-w-4xl mx-auto mb-16">
-          <h2 className="text-2xl font-bold text-center mb-8">Trusted by job seekers. <span className='text-gray-500'>(Well, it will be.)</span></h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 transform-gpu relative">
-              <div className="flex items-center mb-4">
-                <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center mr-2 shadow-lg border border-gray-200">
-                  <Image src="/logo.png" alt="Logo" width={40} height={40} className="h-10 w-10 object-contain" />
+          <main className="flex flex-col min-h-[calc(100vh-4rem)] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 pt-20">
+            {/* Hero Section */}
+            <div className="flex-1 flex flex-col justify-center">
+              <div className="text-center pt-12 pb-6 md:pt-20 md:pb-10">
+                <div className="animate-pulse-slow inline-flex items-center justify-center h-20 w-20 rounded-full bg-white mb-6 shadow-lg border border-gray-200">
+                  <div className="h-14 w-14 rounded-full flex items-center justify-center">
+                    <Image src="/logo.png" alt="Logo" width={56} height={56} className="h-14 w-14 object-contain" />
+                  </div>
                 </div>
-                <div className="ml-4">
-                  <h3 className="font-semibold">John Doe</h3>
-                  <p className="text-sm text-gray-600">Software Engineer</p>
+                <h1 className="text-5xl font-bold text-center text-gray-900">Interview<span className="bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] bg-clip-text text-transparent">IQ</span></h1>
+                <h2 className="text-xl text-gray-700 font-medium mt-2 text-center">The AI-powered prep tool for job seekers</h2>
+                <p className="text-base text-gray-500 max-w-xl mx-auto mt-2 text-center mb-8">Generate company insights, culture breakdowns, and talking points tailored to your resume.</p>
+
+                {/* Demo Preview */}
+                <div className="relative max-w-3xl mx-auto mb-8 rounded-lg overflow-hidden shadow-2xl">
+                  <div className="aspect-video bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="animate-pulse-slow inline-flex items-center justify-center h-20 w-20 rounded-full bg-white mb-4 shadow-lg border border-gray-200">
+                        <Image src="/logo.png" alt="Logo" width={48} height={48} className="h-12 w-12 object-contain" />
+                      </div>
+                      <p className="text-white text-lg">Demo not released yet.</p>
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                </div>
+
+                {/* CTA Buttons */}
+                <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+                  <a href={isAuthenticated ? "/dashboard" : "/signup"}>
+                    <ButtonColorful label={isAuthenticated ? "Go to Dashboard" : "Get Started Free"} className="px-8 py-6 text-lg w-full sm:w-auto" />
+                  </a>
+                  <Button variant="outline" className="px-8 py-6 text-lg hover:bg-gray-200 transition-all w-full sm:w-auto">
+                    Watch Demo
+                  </Button>
+                </div>
+
+                {/* Feature Tags */}
+                <div className="flex flex-wrap justify-center gap-3 mb-6">
+                  <Badge
+                    variant="outline"
+                    className="py-2 px-4 bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all"
+                  >
+                    <span className="h-2 w-2 rounded-full bg-[#4B6EF5] mr-2"></span>
+                    Company Insights
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="py-2 px-4 bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all"
+                  >
+                    <span className="h-2 w-2 rounded-full bg-[#8C52FF] mr-2"></span>
+                    Culture & Values
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="py-2 px-4 bg-white shadow-sm border border-gray-200 hover:shadow-md transition-all"
+                  >
+                    <span className="h-2 w-2 rounded-full bg-[#10F2C5] mr-2"></span>
+                    Personalized Talking Points
+                  </Badge>
+                </div>
+
+                {/* Waitlist Section - Moved here and made more compact */}
+                <div className="max-w-md mx-auto mt-4 mb-2">
+                  <WaitlistForm compact={true} isAuthenticated={isAuthenticated ?? false} />
                 </div>
               </div>
-              <p className="text-gray-700">"InterviewIQ helped me prepare for my dream job at Google. The company insights were spot-on and the talking points were incredibly helpful!"</p>
-              <span className="absolute bottom-4 right-4 text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full border border-gray-200">Sample</span>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 transform-gpu relative">
-              <div className="flex items-center mb-4">
-                <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center mr-2 shadow-lg border border-gray-200">
-                  <Image src="/logo.png" alt="Logo" width={40} height={40} className="h-10 w-10 object-contain" />
+
+            {/* Statistics Section */}
+            <div className="max-w-4xl mx-auto mb-16">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                <div className="p-4">
+                  <div className="text-3xl font-bold text-[#4B6EF5] mb-2">10k+</div>
+                  <div className="text-sm text-gray-600">Reports Generated</div>
                 </div>
-                <div className="ml-4">
-                  <h3 className="font-semibold">Alice Smith</h3>
-                  <p className="text-sm text-gray-600">Product Manager</p>
+                <div className="p-4">
+                  <div className="text-3xl font-bold text-[#8C52FF] mb-2">95%</div>
+                  <div className="text-sm text-gray-600">Success Rate</div>
+                </div>
+                <div className="p-4">
+                  <div className="text-3xl font-bold text-[#10F2C5] mb-2">500+</div>
+                  <div className="text-sm text-gray-600">Companies Analyzed</div>
+                </div>
+                <div className="p-4">
+                  <div className="text-3xl font-bold text-[#4B6EF5] mb-2">24/7</div>
+                  <div className="text-sm text-gray-600">Support Available</div>
                 </div>
               </div>
-              <p className="text-gray-700">"The culture insights were invaluable. I was able to align my experience with the company's values and got the job!"</p>
-              <span className="absolute bottom-4 right-4 text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full border border-gray-200">Sample</span>
             </div>
-          </div>
-        </div>
 
-        {/* Main Form Section */}
-        <div id="generate-report" className="max-w-5xl w-full mx-auto mb-8">
-          <ReportForm />
-        </div>
+            {/* Features Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+              <FeatureCard
+                icon="building"
+                title="Company Basics"
+                description="Founding year, HQ, CEO, size, and mission pulled from company site/about pages."
+              />
+              <FeatureCard
+                icon="package"
+                title="Products & Services"
+                description="Structured bullets summarizing what the company offers using AI."
+              />
+              <FeatureCard
+                icon="newspaper"
+                title="Recent News & Press"
+                description="Top 3–5 headlines with title, link, source, and publish date."
+              />
+              <FeatureCard
+                icon="users"
+                title="Culture & Values"
+                description="Insights from Careers pages, Glassdoor, and social profiles."
+              />
+              <FeatureCard
+                icon="message-square"
+                title="Talking Points Generator"
+                description="3–5 strategic interview questions based on company data and role."
+              />
+              <FeatureCard
+                icon="file-text"
+                title="Resume Upload"
+                description="Upload your resume to tailor talking points and role alignment."
+              />
+            </div>
 
-        {/* Pricing Section */}
-        <div id="pricing" className="mt-4">
-          <PricingSection />
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-gray-50 border-t border-gray-200 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center mb-4 md:mb-0">
-              <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center mr-2 shadow-lg border border-gray-200">
-                <Image src="/logo.png" alt="Logo" width={40} height={40} className="h-10 w-10 object-contain" />
+            {/* Testimonials Section */}
+            <div className="max-w-4xl mx-auto mb-16">
+              <h2 className="text-2xl font-bold text-center mb-8">Trusted by job seekers. <span className='text-gray-500'>(Well, it will be.)</span></h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="group will-change-transform transform-gpu transition-transform duration-300 hover:-translate-y-1 [backface-visibility:hidden] translate-z-0">
+                  <div className="bg-white p-6 rounded-lg shadow-md group-hover:shadow-xl relative transition-colors duration-300">
+                    <div className="flex items-center mb-4">
+                      <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center mr-2 shadow-lg border border-gray-200">
+                        <Image src="/logo.png" alt="Logo" width={40} height={40} className="h-10 w-10 object-contain" />
+                      </div>
+                      <div className="ml-4">
+                        <h3 className="font-semibold">John Doe</h3>
+                        <p className="text-sm text-gray-600">Software Engineer</p>
+                      </div>
+                    </div>
+                    <p className="text-gray-700">"InterviewIQ helped me prepare for my dream job at Google. The company insights were spot-on and the talking points were incredibly helpful!"</p>
+                    <span className="absolute bottom-4 right-4 text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full border border-gray-200">Sample</span>
+                  </div>
+                </div>
+                <div className="group will-change-transform transform-gpu transition-transform duration-300 hover:-translate-y-1 [backface-visibility:hidden] translate-z-0">
+                  <div className="bg-white p-6 rounded-lg shadow-md group-hover:shadow-xl relative transition-colors duration-300">
+                    <div className="flex items-center mb-4">
+                      <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center mr-2 shadow-lg border border-gray-200">
+                        <Image src="/logo.png" alt="Logo" width={40} height={40} className="h-10 w-10 object-contain" />
+                      </div>
+                      <div className="ml-4">
+                        <h3 className="font-semibold">Alice Smith</h3>
+                        <p className="text-sm text-gray-600">Product Manager</p>
+                      </div>
+                    </div>
+                    <p className="text-gray-700">"The culture insights were invaluable. I was able to align my experience with the company's values and got the job!"</p>
+                    <span className="absolute bottom-4 right-4 text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full border border-gray-200">Sample</span>
+                  </div>
+                </div>
               </div>
-              <span className="text-xl font-bold text-gray-900">Interview<span className="bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] bg-clip-text text-transparent">IQ</span></span>
             </div>
-            <div className="text-sm text-gray-500">© {new Date().getFullYear()} InterviewIQ. All rights reserved.</div>
+
+            {/* Main Form Section */}
+            <div id="generate-report" className="max-w-5xl w-full mx-auto mb-8">
+              <ReportForm isAuthenticated={isAuthenticated ?? false} />
+            </div>
+
+            {/* Pricing Section */}
+            <div id="pricing" className="mt-4">
+              <PricingSection />
+            </div>
+          </main>
+        </WavyBackground>
+      </div>
+      <footer className="w-full bg-gray-50 border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <img src="/logo.svg" className="h-6 w-6" alt="Logo" />
+            <span className="font-semibold text-gray-800">Interview<span className="text-purple-500">IQ</span></span>
           </div>
+          <p className="text-sm text-gray-500">© {new Date().getFullYear()} InterviewIQ. All rights reserved.</p>
         </div>
       </footer>
-    </WavyBackground>
+    </>
   )
 }

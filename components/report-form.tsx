@@ -5,6 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { ButtonColorful } from "@/components/ui/button-colorful"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card } from "@/components/ui/card"
@@ -13,7 +14,11 @@ import ResumeUploader from "@/components/resume-uploader"
 import { getSupabaseClient } from "@/lib/supabase"
 import Link from "next/link"
 
-export default function ReportForm() {
+interface ReportFormProps {
+  isAuthenticated?: boolean
+}
+
+export default function ReportForm({ isAuthenticated = true }: ReportFormProps) {
   const [companyName, setCompanyName] = useState("")
   const [companyWebsite, setCompanyWebsite] = useState("")
   const [jobDescription, setJobDescription] = useState("")
@@ -133,7 +138,7 @@ export default function ReportForm() {
           <Link href="/reports/sample" className="block">
             <button
               type="button"
-              className="w-full py-3 px-6 rounded-xl border-2 border-transparent bg-white shadow-sm font-semibold text-[#4B6EF5] transition-all duration-200 hover:bg-gradient-to-r hover:from-[#F4F7FE] hover:to-[#E9E3FF] hover:border-[#8C52FF] focus:outline-none focus:ring-2 focus:ring-[#8C52FF]"
+              className="w-full py-3 px-6 rounded-xl border-2 border-transparent bg-white shadow-sm font-semibold text-[#4B6EF5] hover:bg-gray-200 transition-all"
             >
               See a sample report
             </button>
@@ -142,14 +147,18 @@ export default function ReportForm() {
 
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
-        <Button
-          type="submit"
-          className="w-full py-6 text-lg bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] hover:shadow-lg transition-all group"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "Generating Report..." : "Generate Report"}
-          <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-        </Button>
+        {isAuthenticated ? (
+          <Button
+            type="submit"
+            className="w-full py-6 text-lg bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] group"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Generating Report..." : "Generate Report"}
+            <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+          </Button>
+        ) : (
+          <ButtonColorful label="Generate Report" className="w-full py-6 text-lg" />
+        )}
       </form>
     </Card>
   )

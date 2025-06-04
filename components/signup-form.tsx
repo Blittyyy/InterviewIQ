@@ -14,6 +14,9 @@ export default function SignupForm() {
   const [password, setPassword] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
+  const [showReset, setShowReset] = useState(false)
+  const [resetEmail, setResetEmail] = useState("")
+  const [resetMessage, setResetMessage] = useState("")
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,6 +63,23 @@ export default function SignupForm() {
       setError(err instanceof Error ? err.message : "Failed to create account")
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setResetMessage("")
+    try {
+      const supabase = getSupabaseClient()
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: typeof window !== "undefined"
+          ? `${window.location.origin}/reset-password`
+          : undefined,
+      })
+      if (error) throw error
+      setResetMessage("Password reset email sent! Check your inbox.")
+    } catch (err) {
+      setResetMessage(err instanceof Error ? err.message : "Failed to send reset email")
     }
   }
 
@@ -118,7 +138,39 @@ export default function SignupForm() {
                 required
               />
             </div>
+            <div className="text-right">
+              <button
+                type="button"
+                className="text-xs text-[#4B6EF5] hover:underline"
+                onClick={() => setShowReset((v) => !v)}
+              >
+                Forgot password?
+              </button>
+            </div>
           </div>
+
+          {showReset && (
+            <div className="space-y-2 mb-2">
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                required
+              />
+              <Button
+                type="button"
+                className="w-full"
+                variant="outline"
+                onClick={handlePasswordReset}
+              >
+                Send password reset email
+              </Button>
+              {resetMessage && (
+                <div className="text-xs text-center text-gray-600 mt-1">{resetMessage}</div>
+              )}
+            </div>
+          )}
 
           {error && (
             <div className="flex items-center space-x-2 text-red-500 bg-red-50 p-3 rounded-md">
