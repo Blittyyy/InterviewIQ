@@ -113,13 +113,18 @@ export default function Home() {
 
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-                  <a href={isAuthenticated ? "/dashboard" : "/signup"}>
-                    <ButtonColorful label={isAuthenticated ? "Go to Dashboard" : "Get Started Free"} className="px-8 py-6 text-lg w-full sm:w-auto" />
+                  <a href={isAuthenticated ? "/dashboard" : "/signup?trial=true"}>
+                    <ButtonColorful label={isAuthenticated ? "Go to Dashboard" : "Start Free Trial"} className="px-8 py-6 text-lg w-full sm:w-auto" />
                   </a>
                   <Button variant="outline" className="px-8 py-6 text-lg hover:bg-gray-200 transition-all w-full sm:w-auto">
                     Watch Demo
                   </Button>
                 </div>
+
+                {/* Trial Note - Only show for non-authenticated users */}
+                {!isAuthenticated && (
+                  <p className="text-sm text-gray-500 mb-6">No card needed. Ends automatically after 7 days.</p>
+                )}
 
                 {/* Feature Tags */}
                 <div className="flex flex-wrap justify-center gap-3 mb-6">

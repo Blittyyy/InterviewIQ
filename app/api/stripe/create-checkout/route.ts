@@ -4,17 +4,17 @@ import { NextResponse } from "next/server"
 import Stripe from "stripe"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2023-10-16",
+  apiVersion: "2025-04-30.basil",
 })
 
 const PRICE_IDS = {
-  pro: process.env.STRIPE_PRO_PRICE_ID!,
-  dayPass: process.env.STRIPE_DAY_PASS_PRICE_ID!,
+  proMonthly: process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID!,
+  proAnnual: process.env.NEXT_PUBLIC_STRIPE_PRO_ANNUAL_PRICE_ID!,
 }
 
 export async function POST(request: Request) {
   try {
-    const { priceId } = await request.json()
+    const { priceId, isAnnual } = await request.json()
     const supabase = createRouteHandlerClient({ cookies })
 
     const {
@@ -25,22 +25,19 @@ export async function POST(request: Request) {
       return new NextResponse("Unauthorized", { status: 401 })
     }
 
-    // Determine mode based on priceId
-    let mode: "payment" | "subscription" = "subscription"
-    if (priceId === process.env.STRIPE_DAY_PASS_PRICE_ID) {
-      mode = "payment"
-    }
+    // Determine which price ID to use based on annual toggle
+    const finalPriceId = isAnnual ? PRICE_IDS.proAnnual : PRICE_IDS.proMonthly
 
     // Create Stripe checkout session
     const checkoutSession = await stripe.checkout.sessions.create({
       customer_email: session.user.email,
       line_items: [
         {
-          price: priceId,
+          price: finalPriceId,
           quantity: 1,
         },
       ],
-      mode,
+      mode: "subscription",
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
       metadata: {

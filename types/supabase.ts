@@ -39,6 +39,8 @@ export interface Database {
           reports_generated: number
           daily_reports_count: number
           created_at: string
+          trial_active: boolean
+          trial_start_date: string | null
         }
         Insert: {
           id?: string
@@ -49,6 +51,8 @@ export interface Database {
           reports_generated?: number
           daily_reports_count?: number
           created_at?: string
+          trial_active?: boolean
+          trial_start_date?: string | null
         }
         Update: {
           id?: string
@@ -59,6 +63,8 @@ export interface Database {
           reports_generated?: number
           daily_reports_count?: number
           created_at?: string
+          trial_active?: boolean
+          trial_start_date?: string | null
         }
       }
       reports: {

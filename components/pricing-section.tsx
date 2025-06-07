@@ -8,56 +8,48 @@ import { useRouter } from "next/navigation"
 
 const plans = [
   {
-    name: "Free",
-    price: "$0",
-    period: "/month",
+    name: "7-Day Free Trial",
+    price: "Free",
+    period: "for 7 days",
     features: [
-      "1 report per day",
-      "Summary view only",
-      "Basic company insights",
-      "No export options",
-      "No resume matching",
+      "All Pro features included",
+      "No credit card required",
+      "Ends automatically",
+      "Countdown on dashboard",
+      "Start anytime",
     ],
-    buttonText: "Get Started",
-    type: "free",
+    buttonText: "Start Free Trial",
+    type: "trial",
   },
   {
-    name: "Day Pass",
-    price: "$3",
-    period: "/day",
-    features: [
-      "3 full reports",
-      "Complete company insights",
-      "Resume upload & matching",
-      "Export to PDF",
-      "24-hour access window",
-    ],
-    buttonText: "Buy Day Pass",
-    type: "dayPass",
-    priceId: process.env.NEXT_PUBLIC_STRIPE_DAY_PASS_PRICE_ID,
-  },
-  {
-    name: "Pro",
+    name: "Pro Plan",
     price: "$9",
     period: "/month",
     features: [
       "Unlimited reports",
-      "Full access to all features",
-      "Advanced resume matching",
+      "Advanced company insights",
+      "Resume upload & matching",
+      "Export to PDF",
       "Competitor analysis",
       "Talking points generator",
       "Notes & bookmarks",
       "Priority support",
     ],
-    buttonText: "Subscribe to Pro",
+    buttonText: "Upgrade to Pro",
     type: "pro",
     priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID,
+    annualOption: {
+      price: "$90",
+      period: "/year",
+      savings: "2 months free",
+    },
   },
 ]
 
 export default function PricingSection() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
   const [loading, setLoading] = useState<string | null>(null)
+  const [isAnnual, setIsAnnual] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -77,7 +69,10 @@ export default function PricingSection() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ priceId }),
+        body: JSON.stringify({ 
+          priceId,
+          isAnnual 
+        }),
       })
       const { url } = await response.json()
       if (url) {
@@ -90,11 +85,28 @@ export default function PricingSection() {
     }
   }
 
-  const handleFreeGetStarted = () => {
-    if (isAuthenticated) {
-      router.push("/dashboard")
-    } else {
-      router.push("/signup")
+  const handleTrialStart = async () => {
+    if (!isAuthenticated) {
+      router.push("/signup?trial=true")
+      return
+    }
+    
+    try {
+      setLoading("trial")
+      const response = await fetch("/api/trial/start", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+      
+      if (response.ok) {
+        router.push("/dashboard")
+      }
+    } catch (error) {
+      console.error("Error starting trial:", error)
+    } finally {
+      setLoading(null)
     }
   }
 
@@ -107,16 +119,16 @@ export default function PricingSection() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
         {plans.map((plan, idx) => (
           <div
             key={plan.name}
             className="group will-change-transform transform-gpu transition-transform duration-300 hover:-translate-y-1 [backface-visibility:hidden] translate-z-0"
           >
             <Card
-              className={`border shadow-sm group-hover:shadow-xl transition-colors duration-300 ${plan.name === "Pro" ? "border-2 border-[#4B6EF5] shadow-md relative overflow-hidden" : "border-gray-200"}`}
+              className={`border shadow-sm group-hover:shadow-xl transition-colors duration-300 ${plan.name === "Pro Plan" ? "border-2 border-[#4B6EF5] shadow-md relative overflow-hidden" : "border-gray-200"}`}
             >
-              {plan.name === "Pro" && (
+              {plan.name === "Pro Plan" && (
                 <div className="absolute top-0 right-0 bg-[#4B6EF5] text-white text-xs font-bold py-1 px-3 rounded-bl-md">
                   POPULAR
                 </div>
@@ -127,11 +139,40 @@ export default function PricingSection() {
                   <span className="text-3xl font-bold">{plan.price}</span>
                   <span className="text-gray-500 ml-1">{plan.period}</span>
                 </div>
+                {plan.name === "Pro Plan" && plan.annualOption && (
+                  <div className="mt-4">
+                    <div className="flex items-center justify-center space-x-2">
+                      <span className="text-sm text-gray-600">Monthly</span>
+                      <button
+                        onClick={() => setIsAnnual(!isAnnual)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#4B6EF5] focus:ring-offset-2 ${
+                          isAnnual ? "bg-[#4B6EF5]" : "bg-gray-200"
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            isAnnual ? "translate-x-6" : "translate-x-1"
+                          }`}
+                        />
+                      </button>
+                      <span className="text-sm text-gray-600">Annual</span>
+                    </div>
+                    {isAnnual && (
+                      <div className="mt-2 text-center">
+                        <span className="text-2xl font-bold">{plan.annualOption.price}</span>
+                        <span className="text-gray-500 ml-1">{plan.annualOption.period}</span>
+                        <div className="mt-1">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            {plan.annualOption.savings}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <CardDescription className="mt-2">
-                  {plan.name === "Free"
-                    ? "Perfect for occasional interviews"
-                    : plan.name === "Day Pass"
-                    ? "For when you need a quick boost"
+                  {plan.name === "7-Day Free Trial"
+                    ? "Try all Pro features risk-free"
                     : "For serious job seekers"}
                 </CardDescription>
               </CardHeader>
@@ -146,10 +187,13 @@ export default function PricingSection() {
                 </ul>
               </CardContent>
               <CardFooter>
-                {plan.type === "free" ? (
-                  <Button variant="outline" className="w-full hover:bg-gray-200 transition-all" onClick={handleFreeGetStarted}>
-                    {plan.buttonText}
-                  </Button>
+                {plan.type === "trial" ? (
+                  <ButtonColorful
+                    label={plan.buttonText}
+                    className="w-full"
+                    disabled={loading === "trial"}
+                    onClick={handleTrialStart}
+                  />
                 ) : (
                   <ButtonColorful
                     label={plan.buttonText}
