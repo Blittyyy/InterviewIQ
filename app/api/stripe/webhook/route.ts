@@ -4,7 +4,7 @@ import { NextResponse } from "next/server"
 import Stripe from "stripe"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2023-10-16",
+  apiVersion: "2025-04-30.basil",
 })
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
@@ -39,10 +39,8 @@ export async function POST(request: Request) {
         const { error } = await supabase
           .from("users")
           .update({
-            subscription_status: priceId === process.env.STRIPE_PRO_PRICE_ID ? "pro" : "day-pass",
-            subscription_end_date: priceId === process.env.STRIPE_DAY_PASS_PRICE_ID 
-              ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours from now
-              : null,
+            subscription_status: "pro",
+            subscription_end_date: null,
           })
           .eq("id", userId)
 

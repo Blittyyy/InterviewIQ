@@ -37,7 +37,7 @@ const plans = [
     ],
     buttonText: "Upgrade to Pro",
     type: "pro",
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID,
+    priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_MONTHLY_PRICE_ID,
     annualOption: {
       price: "$90",
       period: "/year",
@@ -198,12 +198,13 @@ export default function PricingSection() {
                   <ButtonColorful
                     label={plan.buttonText}
                     className="w-full"
-                    disabled={loading === plan.priceId}
+                    disabled={false}
                     onClick={() => {
+                      console.log("ButtonColorful clicked");
                       if (!isAuthenticated) {
-                        router.push("/signup")
+                        router.push("/signup");
                       } else if (plan.priceId) {
-                        handleCheckout(plan.priceId)
+                        handleCheckout(plan.priceId);
                       }
                     }}
                   />

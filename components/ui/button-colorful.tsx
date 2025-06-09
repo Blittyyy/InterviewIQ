@@ -4,15 +4,18 @@ import { ArrowUpRight } from "lucide-react";
 
 interface ButtonColorfulProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     label?: string;
+    type?: React.ButtonHTMLAttributes<HTMLButtonElement>['type'];
 }
 
 export function ButtonColorful({
     className,
     label = "Explore Components",
+    type = "button",
     ...props
 }: ButtonColorfulProps) {
     return (
         <Button
+            type={type}
             className={cn(
                 "relative h-10 px-4 overflow-hidden",
                 "bg-zinc-900 dark:bg-zinc-100",
