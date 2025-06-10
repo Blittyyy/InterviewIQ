@@ -7,6 +7,7 @@ import { getSupabaseClient } from "@/lib/supabase"
 import { Database } from "@/types/supabase"
 import { CrownIcon, ClockIcon, ArrowUpRightIcon } from "lucide-react"
 import Link from "next/link"
+import { ButtonColorful } from "@/components/ui/button-colorful"
 
 type UserSubscription = Database["public"]["Tables"]["users"]["Row"]
 
@@ -122,12 +123,9 @@ export default function SubscriptionStatus() {
         </div>
 
         {subscription.subscription_status === "free" && (
-          <Link href="/pricing">
-            <Button className="bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] text-white hover:shadow-lg transition-all">
-              Upgrade
-              <ArrowUpRightIcon className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
+          <a href="/#pricing">
+            <ButtonColorful label="Upgrade" className="px-6" />
+          </a>
         )}
       </div>
     </Card>

@@ -90,16 +90,18 @@ export default function PricingSection() {
       router.push("/signup?trial=true")
       return
     }
-    
     try {
       setLoading("trial")
+      const supabase = getSupabaseClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      const accessToken = session?.access_token
       const response = await fetch("/api/trial/start", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         },
       })
-      
       if (response.ok) {
         router.push("/dashboard")
       }

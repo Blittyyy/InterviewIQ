@@ -15,6 +15,8 @@ import { SparklesText } from "@/components/ui/sparkles-text"
 import Image from "next/image"
 import { WavyBackground } from "@/components/ui/wavy-background"
 import { ButtonColorful } from "@/components/ui/button-colorful"
+import TrialNotification from "@/components/TrialNotification"
+import Link from "next/link"
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
@@ -42,9 +44,9 @@ export default function Home() {
         <WavyBackground backgroundFill="#fff" blur={20} waveOpacity={0.15} className="relative z-10">
           {/* Navigation */}
           <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-lg bg-white/90 border-b border-gray-100 shadow-sm">
-            <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto grid grid-cols-3 items-center h-16 px-4 sm:px-6 lg:px-8">
               {/* Left: Logo */}
-              <div className="flex items-center">
+              <div className="flex items-center gap-2 min-w-0">
                 <div className="flex-shrink-0 flex items-center">
                   <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center mr-2 shadow-lg border border-gray-200">
                     <Image src="/logo.png" alt="Logo" width={40} height={40} className="h-10 w-10 object-contain" />
@@ -53,13 +55,13 @@ export default function Home() {
                 </div>
               </div>
               {/* Center: Pricing */}
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                <a href="#pricing" className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium flex items-center">
+              <div className="flex justify-center">
+                <a href="#pricing" className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium flex items-center font-bold">
                   <SparklesText text="Pricing" className="text-base" sparklesCount={8} />
                 </a>
               </div>
               {/* Right: Action buttons */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0 justify-end">
                 {isAuthenticated === null ? null : isAuthenticated ? (
                   <>
                     <a href="#generate-report" className="block">
@@ -151,9 +153,14 @@ export default function Home() {
                   </Badge>
                 </div>
 
-                {/* Waitlist Section - Moved here and made more compact */}
-                <div className="max-w-md mx-auto mt-4 mb-2">
-                  <WaitlistForm compact={true} isAuthenticated={isAuthenticated ?? false} />
+                {/* Waitlist and Trial Notification Section */}
+                <div className="max-w-3xl mx-auto mt-4 mb-2 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                  <div>
+                    <TrialNotification />
+                  </div>
+                  <div>
+                    <WaitlistForm compact={true} isAuthenticated={isAuthenticated ?? false} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -264,12 +271,20 @@ export default function Home() {
         </WavyBackground>
       </div>
       <footer className="w-full bg-gray-50 border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <img src="/logo.svg" className="h-6 w-6" alt="Logo" />
-            <span className="font-semibold text-gray-800">Interview<span className="text-purple-500">IQ</span></span>
+        <div className="max-w-7xl mx-auto px-4 py-6 flex items-center">
+          <div className="flex items-center gap-2 min-w-0">
+            <img src="/logo.png" className="h-6 w-6" alt="Logo" />
+            <span className="font-semibold text-gray-900">Interview<span className="bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] bg-clip-text text-transparent">IQ</span></span>
           </div>
-          <p className="text-sm text-gray-500">© {new Date().getFullYear()} InterviewIQ. All rights reserved.</p>
+          <div className="flex-1 flex justify-center">
+            <Link
+              href="/contact"
+              className="font-bold text-gray-700 hover:text-gray-900 transition-colors duration-200"
+            >
+              Contact
+            </Link>
+          </div>
+          <p className="text-xs text-gray-500 ml-auto">© {new Date().getFullYear()} InterviewIQ</p>
         </div>
       </footer>
     </>

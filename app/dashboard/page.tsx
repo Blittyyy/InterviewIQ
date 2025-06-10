@@ -1,11 +1,12 @@
 import type { Metadata } from "next"
-import { Button } from "@/components/ui/button"
+import { ButtonColorful } from "@/components/ui/button-colorful"
 import { Card } from "@/components/ui/card"
 import { PlusIcon, FileTextIcon } from "lucide-react"
 import Link from "next/link"
 import ProtectedRoute from "@/components/protected-route"
 import SubscriptionStatus from "@/components/subscription-status"
 import BackgroundBlobs from "@/components/BackgroundBlobs"
+import TrialNotification from "@/components/TrialNotification"
 
 export const metadata: Metadata = {
   title: "Dashboard | InterviewIQ",
@@ -24,32 +25,30 @@ export default function DashboardPage() {
             {/* Center: Home button */}
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
               <Link href="/">
-                <Button className="bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] text-white px-6">
-                  Home
-                </Button>
+                <ButtonColorful label="Home" className="px-6" />
               </Link>
             </div>
             {/* Right: New Report button */}
-            <Link href="/#generate-report">
-              <Button className="bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] text-white">
-                <PlusIcon className="h-4 w-4 mr-2" />
-                New Report
-              </Button>
-            </Link>
+            <a href="/#generate-report">
+              <ButtonColorful label="New Report" />
+            </a>
           </div>
 
           <div className="mb-8">
             <SubscriptionStatus />
           </div>
 
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-            <div>
+          {/* Flex row: 'Your Reports' left, Free Trial Active right */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
+            <div className="text-left">
               <h2 className="text-2xl font-bold text-gray-900">Your Reports</h2>
               <p className="text-gray-600 mt-1">View and manage your company research reports</p>
             </div>
+            <div className="flex justify-center md:justify-end w-full md:w-auto">
+              <TrialNotification variant="subtle" />
+            </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-4">
             {/* Empty state */}
             <Card className="col-span-full flex flex-col items-center justify-center p-8 text-center border-dashed border-2 border-gray-300 bg-white/50">
               <FileTextIcon className="h-12 w-12 text-gray-400 mb-4" />
@@ -57,12 +56,9 @@ export default function DashboardPage() {
               <p className="text-gray-600 mb-6">
                 Generate your first company research report to prepare for your interview.
               </p>
-              <Link href="/#generate-report">
-                <Button className="bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] text-white">
-                  <PlusIcon className="h-4 w-4 mr-2" />
-                  Generate Report
-                </Button>
-              </Link>
+              <a href="/#generate-report">
+                <ButtonColorful label="Generate Report" className="w-full" />
+              </a>
             </Card>
 
             {/* This would be populated with actual reports in a real implementation */}
