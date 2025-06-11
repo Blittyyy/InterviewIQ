@@ -156,7 +156,16 @@ export default function Home() {
                 {/* Waitlist and Trial Notification Section */}
                 <div className="max-w-3xl mx-auto mt-4 mb-2 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                   <div>
-                    <TrialNotification />
+                    {isAuthenticated ? (
+                      <TrialNotification />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full p-6 bg-white rounded-xl shadow border border-gray-200">
+                        <h3 className="text-base font-bold text-gray-900 mb-2">Unlock Full Access</h3>
+                        <p className="text-base text-gray-600 mb-0 text-center">
+                          Sign up for a free trial to generate company insights, culture breakdowns, and more!
+                        </p>
+                      </div>
+                    )}
                   </div>
                   <div>
                     <WaitlistForm compact={true} isAuthenticated={isAuthenticated ?? false} />

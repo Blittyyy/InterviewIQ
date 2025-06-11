@@ -11,7 +11,7 @@ export default function ContactPage() {
         <MailIcon className="h-10 w-10 text-blue-500 mb-4" />
         <h1 className="text-2xl font-bold text-gray-900 mb-3 text-center">Contact Support</h1>
         <p className="text-gray-600 mb-6 text-center">
-          For any issues or questions, feel free to reach out to us via email.
+          For any issues, bugs, or questions, feel free to reach out to us via email.
         </p>
         <a
           href="mailto:contactinterviewiq@gmail.com"

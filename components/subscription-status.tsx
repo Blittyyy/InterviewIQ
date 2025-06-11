@@ -8,6 +8,7 @@ import { Database } from "@/types/supabase"
 import { CrownIcon, ClockIcon, ArrowUpRightIcon } from "lucide-react"
 import Link from "next/link"
 import { ButtonColorful } from "@/components/ui/button-colorful"
+import { useRouter } from "next/navigation"
 
 type UserSubscription = Database["public"]["Tables"]["users"]["Row"]
 
@@ -15,6 +16,8 @@ export default function SubscriptionStatus() {
   const [subscription, setSubscription] = useState<UserSubscription | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [reportsUsed, setReportsUsed] = useState<number | null>(null)
+  const [loadingPortal, setLoadingPortal] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     const fetchSubscription = async () => {
@@ -99,6 +102,28 @@ export default function SubscriptionStatus() {
               {subscription.subscription_status === "free" && "Free Plan"}
               {subscription.subscription_status === "day-pass" && "Day Pass"}
             </h3>
+            {(subscription.subscription_status === "pro" || subscription.subscription_status === "enterprise") && (
+              <button
+                className="ml-4 px-4 py-1 rounded bg-red-100 text-red-700 font-semibold hover:bg-red-200 transition disabled:opacity-50"
+                disabled={loadingPortal}
+                onClick={async () => {
+                  setLoadingPortal(true)
+                  try {
+                    const res = await fetch("/api/stripe/customer-portal", { method: "POST" })
+                    const data = await res.json()
+                    if (data.url) {
+                      window.location.href = data.url
+                    }
+                  } catch (e) {
+                    alert("Failed to open customer portal.")
+                  } finally {
+                    setLoadingPortal(false)
+                  }
+                }}
+              >
+                {loadingPortal ? "Loading..." : "Cancel Subscription"}
+              </button>
+            )}
           </div>
           
           {subscription.subscription_status === "day-pass" && timeRemaining && (
