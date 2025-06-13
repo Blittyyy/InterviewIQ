@@ -109,15 +109,24 @@ export default function SubscriptionStatus() {
                 onClick={async () => {
                   setLoadingPortal(true)
                   try {
-                    const res = await fetch("/api/stripe/customer-portal", { method: "POST" })
-                    const data = await res.json()
+                    const supabase = getSupabaseClient();
+                    const { data: { session } } = await supabase.auth.getSession();
+                    const accessToken = session?.access_token;
+                    const res = await fetch("/api/stripe/customer-portal", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+                      },
+                    });
+                    const data = await res.json();
                     if (data.url) {
-                      window.location.href = data.url
+                      window.location.href = data.url;
                     }
                   } catch (e) {
-                    alert("Failed to open customer portal.")
+                    alert("Failed to open customer portal.");
                   } finally {
-                    setLoadingPortal(false)
+                    setLoadingPortal(false);
                   }
                 }}
               >
@@ -145,6 +154,18 @@ export default function SubscriptionStatus() {
               )}
             </>
           )}
+          {((subscription.subscription_status === "pro" || subscription.subscription_status === "enterprise") && subscription.subscription_end_date) && (() => {
+            const endDate = new Date(subscription.subscription_end_date);
+            const now = new Date();
+            if (endDate > now) {
+              return (
+                <div className="text-sm text-yellow-700 bg-yellow-100 rounded px-2 py-1 mt-2 inline-block">
+                  Plan still active until {endDate.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                </div>
+              );
+            }
+            return null;
+          })()}
         </div>
 
         {subscription.subscription_status === "free" && (

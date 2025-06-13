@@ -20,6 +20,11 @@ import Link from "next/link"
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+  const [userStatus, setUserStatus] = useState<null | {
+    plan: string;
+    subscription_status: string;
+    trial_active: boolean;
+  }>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -27,6 +32,16 @@ export default function Home() {
       const supabase = getSupabaseClient()
       const { data: { session } } = await supabase.auth.getSession()
       setIsAuthenticated(!!session)
+      if (session?.user) {
+        const { data } = await supabase
+          .from("users")
+          .select("plan, subscription_status, trial_active")
+          .eq("id", session.user.id)
+          .single()
+        setUserStatus(data ?? null)
+      } else {
+        setUserStatus(null)
+      }
     }
     checkAuth()
   }, [])
@@ -157,7 +172,18 @@ export default function Home() {
                 <div className="max-w-3xl mx-auto mt-4 mb-2 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                   <div>
                     {isAuthenticated ? (
-                      <TrialNotification />
+                      userStatus &&
+                      (userStatus.subscription_status === "pro" || userStatus.subscription_status === "enterprise") &&
+                      !userStatus.trial_active ? (
+                        <div className="flex flex-col items-center justify-center h-full p-6 bg-white rounded-xl shadow border border-gray-200 mb-4">
+                          <h3 className="text-lg font-bold text-gray-900 mb-2">Thank you for using InterviewIQ!</h3>
+                          <p className="text-base text-gray-600 mb-0 text-center">
+                            We appreciate your support. Enjoy unlimited access to all features.
+                          </p>
+                        </div>
+                      ) : (
+                        <TrialNotification />
+                      )
                     ) : (
                       <div className="flex flex-col items-center justify-center h-full p-6 bg-white rounded-xl shadow border border-gray-200">
                         <h3 className="text-base font-bold text-gray-900 mb-2">Unlock Full Access</h3>
