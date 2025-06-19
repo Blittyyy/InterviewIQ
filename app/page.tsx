@@ -25,6 +25,7 @@ export default function Home() {
     subscription_status: string;
     trial_active: boolean;
   }>(null)
+  const [userStatusLoading, setUserStatusLoading] = useState(true);
   const router = useRouter()
 
   useEffect(() => {
@@ -42,9 +43,18 @@ export default function Home() {
       } else {
         setUserStatus(null)
       }
+      setUserStatusLoading(false)
     }
     checkAuth()
   }, [])
+
+  // Debug: Log userStatus to check trial state
+  console.log("Homepage userStatus:", userStatus)
+
+  // Debug: Log isAuthenticated and userStatus on every render
+  useEffect(() => {
+    console.log("[RENDER] isAuthenticated:", isAuthenticated, "userStatus:", userStatus, "userStatusLoading:", userStatusLoading);
+  });
 
   const handleLogout = async () => {
     const supabase = getSupabaseClient()
@@ -82,7 +92,7 @@ export default function Home() {
                     <a href="#generate-report" className="block">
                       <ButtonColorful label={"New Report"} className="w-full" />
                     </a>
-                    <Button variant="ghost" onClick={handleLogout} className="transition-all">
+                    <Button variant="ghost" onClick={handleLogout} className="hover:bg-gray-200 transition-all">
                       Log Out
                     </Button>
                   </>
@@ -130,9 +140,17 @@ export default function Home() {
 
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-                  <a href={isAuthenticated ? "/dashboard" : "/signup?trial=true"}>
-                    <ButtonColorful label={isAuthenticated ? "Go to Dashboard" : "Start Free Trial"} className="px-8 py-6 text-lg w-full sm:w-auto" />
-                  </a>
+                  {(!isAuthenticated || (userStatus && userStatus.trial_active === false)) ? (
+                    <ButtonColorful
+                      label="Start Free Trial"
+                      className="px-8 py-6 text-lg w-full sm:w-auto"
+                      onClick={() => router.push("/signup?trial=true")}
+                    />
+                  ) : (
+                    <a href={isAuthenticated ? "/dashboard" : "/signup?trial=true"}>
+                      <ButtonColorful label={isAuthenticated ? "Go to Dashboard" : "Start Free Trial"} className="px-8 py-6 text-lg w-full sm:w-auto" />
+                    </a>
+                  )}
                   <Button variant="outline" className="px-8 py-6 text-lg hover:bg-gray-200 transition-all w-full sm:w-auto">
                     Watch Demo
                   </Button>
@@ -171,27 +189,28 @@ export default function Home() {
                 {/* Waitlist and Trial Notification Section */}
                 <div className="max-w-3xl mx-auto mt-4 mb-2 grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                   <div>
-                    {isAuthenticated ? (
-                      userStatus &&
-                      (userStatus.subscription_status === "pro" || userStatus.subscription_status === "enterprise") &&
-                      !userStatus.trial_active ? (
-                        <div className="flex flex-col items-center justify-center h-full p-6 bg-white rounded-xl shadow border border-gray-200 mb-4">
-                          <h3 className="text-lg font-bold text-gray-900 mb-2">Thank you for using InterviewIQ!</h3>
-                          <p className="text-base text-gray-600 mb-0 text-center">
-                            We appreciate your support. Enjoy unlimited access to all features.
-                          </p>
-                        </div>
-                      ) : (
-                        <TrialNotification />
-                      )
-                    ) : (
+                    {(!isAuthenticated || (userStatus && userStatus.trial_active === false)) ? (
                       <div className="flex flex-col items-center justify-center h-full p-6 bg-white rounded-xl shadow border border-gray-200">
                         <h3 className="text-base font-bold text-gray-900 mb-2">Unlock Full Access</h3>
                         <p className="text-base text-gray-600 mb-0 text-center">
                           Sign up for a free trial to generate company insights, culture breakdowns, and more!
                         </p>
+                        <ButtonColorful
+                          label="Start Free Trial"
+                          className="mt-4 w-full"
+                          onClick={() => router.push("/signup?trial=true")}
+                        />
                       </div>
-                    )}
+                    ) : userStatus && (userStatus.subscription_status === "pro" || userStatus.subscription_status === "enterprise") ? (
+                      <div className="flex flex-col items-center justify-center h-full p-6 bg-white rounded-xl shadow border border-gray-200 mb-4">
+                        <h3 className="text-lg font-bold text-gray-900 mb-2">Thank you for using InterviewIQ!</h3>
+                        <p className="text-base text-gray-600 mb-0 text-center">
+                          We appreciate your support. Enjoy unlimited access to all features.
+                        </p>
+                      </div>
+                    ) : userStatus && userStatus.trial_active ? (
+                      <TrialNotification />
+                    ) : null}
                   </div>
                   <div>
                     <WaitlistForm compact={true} isAuthenticated={isAuthenticated ?? false} />
@@ -307,16 +326,28 @@ export default function Home() {
       </div>
       <footer className="w-full bg-gray-50 border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-6 flex items-center">
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-1 min-w-0">
             <img src="/logo.png" className="h-6 w-6" alt="Logo" />
             <span className="font-semibold text-gray-900">Interview<span className="bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] bg-clip-text text-transparent">IQ</span></span>
           </div>
-          <div className="flex-1 flex justify-center">
+          <div className="flex-1 flex justify-center gap-6">
             <Link
               href="/contact"
               className="font-bold text-gray-700 hover:text-gray-900 transition-colors duration-200"
             >
               Contact
+            </Link>
+            <Link
+              href="/privacy"
+              className="font-bold text-gray-700 hover:text-gray-900 transition-colors duration-200"
+            >
+              Privacy Policy
+            </Link>
+            <Link
+              href="/terms"
+              className="font-bold text-gray-700 hover:text-gray-900 transition-colors duration-200"
+            >
+              Terms
             </Link>
           </div>
           <p className="text-xs text-gray-500 ml-auto">© {new Date().getFullYear()} InterviewIQ</p>

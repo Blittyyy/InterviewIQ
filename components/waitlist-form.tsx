@@ -89,13 +89,12 @@ export default function WaitlistForm({ compact = false, isAuthenticated = true }
               />
             </div>
             {isAuthenticated ? (
-              <Button
+              <ButtonColorful
+                label={isSubmitting ? "Joining..." : "Join Waitlist"}
+                className={compact ? "text-sm py-1 h-9" : undefined}
                 type="submit"
-                className={`bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] text-white ${compact ? "text-sm py-1 h-9" : ""}`}
                 disabled={isSubmitting}
-              >
-                {isSubmitting ? "Joining..." : "Join Waitlist"}
-              </Button>
+              />
             ) : (
               <ButtonColorful label="Join Waitlist" className={compact ? "text-sm py-1 h-9" : undefined} />
             )}

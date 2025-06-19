@@ -89,6 +89,7 @@ export async function POST(request: Request) {
             subscription_expires: null,
             plan: plan,
             ...(subscriptionStartDate && { subscription_start_date: subscriptionStartDate }),
+            trial_active: false,
           })
           .eq("id", userId)
 

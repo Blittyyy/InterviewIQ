@@ -38,18 +38,29 @@ export default function ReportForm({ isAuthenticated = true }: ReportFormProps) 
     setError("")
 
     try {
-      // Get the current user ID if available
+      // Get the current user ID and access token if available
       const supabase = getSupabaseClient()
       const {
         data: { session },
       } = await supabase.auth.getSession()
       const userId = session?.user?.id
+      const accessToken = session?.access_token
+
+      if (!accessToken) {
+        setError("You must be logged in to generate a report. Redirecting to login...")
+        setIsSubmitting(false)
+        setTimeout(() => {
+          router.push("/login")
+        }, 1500)
+        return
+      }
 
       // Submit the report request
       const response = await fetch("/api/reports", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           companyName,
@@ -148,14 +159,12 @@ export default function ReportForm({ isAuthenticated = true }: ReportFormProps) 
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
         {isAuthenticated ? (
-          <Button
+          <ButtonColorful
+            label={isSubmitting ? "Generating Report..." : "Generate Report"}
+            className="w-full py-6 text-lg"
             type="submit"
-            className="w-full py-6 text-lg bg-gradient-to-r from-[#4B6EF5] to-[#8C52FF] group"
             disabled={isSubmitting}
-          >
-            {isSubmitting ? "Generating Report..." : "Generate Report"}
-            <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-          </Button>
+          />
         ) : (
           <ButtonColorful label="Generate Report" className="w-full py-6 text-lg" />
         )}

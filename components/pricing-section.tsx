@@ -13,6 +13,7 @@ const plans = [
     period: "for 7 days",
     features: [
       "All Pro features included",
+      "3 reports per day",
       "No credit card required",
       "Ends automatically",
       "Countdown on dashboard",

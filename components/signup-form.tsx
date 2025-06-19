@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card"
 import { MailIcon, LockIcon, AlertCircle } from "lucide-react"
 import { getSupabaseClient } from "@/lib/supabase"
 import { FcGoogle } from "react-icons/fc"
+import { getDeviceFingerprint, storeFingerprint } from "./device-fingerprint"
 
 export default function SignupForm() {
   const [email, setEmail] = useState("")
@@ -19,6 +20,15 @@ export default function SignupForm() {
   const [resetMessage, setResetMessage] = useState("")
   const router = useRouter()
 
+  useEffect(() => {
+    // Initialize device fingerprint on component mount
+    const initFingerprint = async () => {
+      const fingerprint = await getDeviceFingerprint()
+      storeFingerprint(fingerprint)
+    }
+    initFingerprint()
+  }, [])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -29,12 +39,35 @@ export default function SignupForm() {
 
       // Validate email format
       if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-        throw new Error("Please enter a valid email address")
+        throw new Error("Please enter a valid email address (e.g., student@university.edu)")
       }
 
       // Validate password length
       if (!password || password.length < 6) {
-        throw new Error("Password must be at least 6 characters")
+        throw new Error("Your password needs to be at least 6 characters long")
+      }
+
+      // Get device fingerprint
+      const fingerprint = await getDeviceFingerprint()
+
+      // Check if this device already has an account
+      const { data: existingAccount, error: checkError } = await supabase
+        .from("users")
+        .select("id")
+        .eq("device_fingerprint", fingerprint)
+        .eq("email_verified", true)
+        .single()
+
+      if (checkError && checkError.code !== "PGRST116") { // PGRST116 is "no rows returned" error
+        throw checkError
+      }
+
+      if (existingAccount) {
+        throw new Error(
+          "It looks like you already have an account on this device. " +
+          "Please try logging in instead. " +
+          "If you're having trouble accessing your account, our support team is here to help!"
+        )
       }
 
       // Sign up the user
@@ -43,11 +76,29 @@ export default function SignupForm() {
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            device_fingerprint: fingerprint,
+          },
         },
       })
-      console.log('SignUp response:', data, signUpError)
+
       if (signUpError) {
         throw signUpError
+      }
+
+      // Create user record with device fingerprint
+      if (data.user) {
+        await supabase.from("users").insert([
+          {
+            id: data.user.id,
+            email: data.user.email,
+            plan: "free",
+            reports_generated: 0,
+            daily_reports_count: 0,
+            device_fingerprint: fingerprint,
+            email_verified: false,
+          },
+        ])
       }
 
       // If session exists, user is signed in, redirect to home
@@ -83,6 +134,21 @@ export default function SignupForm() {
     }
   }
 
+  // Add a function to resend verification email
+  const handleResendVerification = async () => {
+    try {
+      const supabase = getSupabaseClient()
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+      })
+      if (error) throw error
+      setError("Verification email resent! Please check your inbox.")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to resend verification email")
+    }
+  }
+
   return (
     <div className="flex items-center justify-center w-full min-h-screen">
       <Card className="w-full max-w-md p-6 space-y-6 bg-white shadow-lg rounded-xl">
@@ -90,6 +156,22 @@ export default function SignupForm() {
           <h2 className="text-2xl font-bold text-gray-900">Create an Account</h2>
           <p className="text-gray-600">Join InterviewIQ to get started</p>
         </div>
+
+        {error && (
+          <div className="flex items-center space-x-2 text-red-500 bg-red-50 p-3 rounded-md">
+            <AlertCircle className="h-4 w-4" />
+            <span className="text-sm">{error}</span>
+            {error.includes("verification") && (
+              <Button
+                variant="link"
+                className="text-sm text-blue-600 hover:text-blue-800"
+                onClick={handleResendVerification}
+              >
+                Resend
+              </Button>
+            )}
+          </div>
+        )}
 
         {/* Google Auth Button */}
         <Button
@@ -169,13 +251,6 @@ export default function SignupForm() {
               {resetMessage && (
                 <div className="text-xs text-center text-gray-600 mt-1">{resetMessage}</div>
               )}
-            </div>
-          )}
-
-          {error && (
-            <div className="flex items-center space-x-2 text-red-500 bg-red-50 p-3 rounded-md">
-              <AlertCircle className="h-4 w-4" />
-              <span className="text-sm">{error}</span>
             </div>
           )}
 

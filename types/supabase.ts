@@ -41,6 +41,9 @@ export interface Database {
           created_at: string
           trial_active: boolean
           trial_start_date: string | null
+          device_fingerprint: string | null
+          email_verified: boolean
+          last_report_at: string | null
         }
         Insert: {
           id?: string
@@ -53,6 +56,9 @@ export interface Database {
           created_at?: string
           trial_active?: boolean
           trial_start_date?: string | null
+          device_fingerprint?: string | null
+          email_verified?: boolean
+          last_report_at?: string | null
         }
         Update: {
           id?: string
@@ -65,6 +71,9 @@ export interface Database {
           created_at?: string
           trial_active?: boolean
           trial_start_date?: string | null
+          device_fingerprint?: string | null
+          email_verified?: boolean
+          last_report_at?: string | null
         }
       }
       reports: {
@@ -99,6 +108,47 @@ export interface Database {
           status?: "pending" | "completed" | "failed"
           data?: Json | null
           summary?: Json | null
+          created_at?: string
+        }
+      }
+      ai_request_logs: {
+        Row: {
+          id: string
+          user_id: string
+          report_id: string
+          model: string
+          input_tokens: number
+          output_tokens: number
+          cost: number
+          response_time_ms: number
+          success: boolean
+          error_message: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          report_id: string
+          model: string
+          input_tokens: number
+          output_tokens: number
+          cost: number
+          response_time_ms: number
+          success: boolean
+          error_message?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          report_id?: string
+          model?: string
+          input_tokens?: number
+          output_tokens?: number
+          cost?: number
+          response_time_ms?: number
+          success?: boolean
+          error_message?: string | null
           created_at?: string
         }
       }

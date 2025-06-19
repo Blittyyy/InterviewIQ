@@ -71,16 +71,12 @@ export default function SubscriptionStatus() {
 
   const getTimeRemaining = () => {
     if (!subscription.subscription_end_date) return null
-    
     const endDate = new Date(subscription.subscription_end_date)
     const now = new Date()
     const diff = endDate.getTime() - now.getTime()
-    
     if (diff <= 0) return null
-    
     const hours = Math.floor(diff / (1000 * 60 * 60))
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-    
     return `${hours}h ${minutes}m`
   }
 
@@ -99,7 +95,7 @@ export default function SubscriptionStatus() {
             <h3 className="font-medium text-gray-900">
               {subscription.subscription_status === "pro" && "Pro Plan"}
               {subscription.subscription_status === "enterprise" && "Enterprise Plan"}
-              {subscription.subscription_status === "free" && "Free Plan"}
+              {subscription.trial_active && "Free Trial"}
               {subscription.subscription_status === "day-pass" && "Day Pass"}
             </h3>
             {(subscription.subscription_status === "pro" || subscription.subscription_status === "enterprise") && (
@@ -134,25 +130,11 @@ export default function SubscriptionStatus() {
               </button>
             )}
           </div>
-          
           {subscription.subscription_status === "day-pass" && timeRemaining && (
             <div className="flex items-center text-sm text-gray-600">
               <ClockIcon className="h-4 w-4 mr-1" />
               <span>{timeRemaining} remaining</span>
             </div>
-          )}
-          
-          {subscription.subscription_status === "free" && (
-            <>
-              <p className="text-sm text-gray-600">
-                Upgrade to Pro for unlimited reports and advanced features
-              </p>
-              {reportsUsed !== null && (
-                <p className="text-xs text-gray-500 mt-1">
-                  You've used {reportsUsed} of 3 free reports today
-                </p>
-              )}
-            </>
           )}
           {((subscription.subscription_status === "pro" || subscription.subscription_status === "enterprise") && subscription.subscription_end_date) && (() => {
             const endDate = new Date(subscription.subscription_end_date);
@@ -166,13 +148,12 @@ export default function SubscriptionStatus() {
             }
             return null;
           })()}
+          {subscription.trial_active && (
+            <div className="text-sm text-blue-700 bg-blue-100 rounded px-2 py-1 mt-2 inline-block">
+              Free trial active
+            </div>
+          )}
         </div>
-
-        {subscription.subscription_status === "free" && (
-          <a href="/#pricing">
-            <ButtonColorful label="Upgrade" className="px-6" />
-          </a>
-        )}
       </div>
     </Card>
   )
