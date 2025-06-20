@@ -2,6 +2,7 @@ import express from 'express';
 import puppeteer from 'puppeteer';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import rateLimit from 'express-rate-limit';
 import { URL } from 'url';
 import fs from 'fs';
 import path from 'path';
@@ -15,6 +16,54 @@ const port = 3005;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Rate limiting configuration
+const rateLimitWindow = parseInt(process.env.RATE_LIMIT_WINDOW) || 60000; // 1 minute default
+const rateLimitMaxRequests = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 60; // 60 requests default
+const scrapeRateLimitWindow = parseInt(process.env.SCRAPE_RATE_LIMIT_WINDOW) || 60000; // 1 minute default
+const scrapeRateLimitMaxRequests = parseInt(process.env.SCRAPE_RATE_LIMIT_MAX_REQUESTS) || 10; // 10 requests default
+
+// Create general rate limiter
+const limiter = rateLimit({
+  windowMs: rateLimitWindow,
+  max: rateLimitMaxRequests,
+  message: {
+    success: false,
+    error: 'Too many requests, please try again later.',
+    retryAfter: Math.ceil(rateLimitWindow / 1000)
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    console.log(`Rate limit exceeded for IP: ${req.ip}`);
+    res.status(429).json({
+      success: false,
+      error: 'Too many requests, please try again later.',
+      retryAfter: Math.ceil(rateLimitWindow / 1000)
+    });
+  }
+});
+
+// Create stricter rate limiter for scraping endpoint
+const scrapeLimiter = rateLimit({
+  windowMs: scrapeRateLimitWindow,
+  max: scrapeRateLimitMaxRequests,
+  message: {
+    success: false,
+    error: 'Too many scraping requests, please try again later.',
+    retryAfter: Math.ceil(scrapeRateLimitWindow / 1000)
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    console.log(`Scraping rate limit exceeded for IP: ${req.ip}`);
+    res.status(429).json({
+      success: false,
+      error: 'Too many scraping requests, please try again later.',
+      retryAfter: Math.ceil(scrapeRateLimitWindow / 1000)
+    });
+  }
+});
+
 // Middleware
 app.use(express.json());
 app.use(cors({
@@ -23,13 +72,16 @@ app.use(cors({
     ['http://localhost:3000', 'https://interviewiq.vercel.app']
 }));
 
+// Apply rate limiting to all routes
+app.use(limiter);
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Scraping endpoint
-app.get('/scrape', async (req, res) => {
+// Scraping endpoint with stricter rate limiting
+app.get('/scrape', scrapeLimiter, async (req, res) => {
   const { url } = req.query;
   
   if (!url) {
@@ -209,4 +261,7 @@ function extractNews(pages) {
 // Start server
 app.listen(port, () => {
   console.log(`Scraping service running on port ${port}`);
+  console.log('Rate limiting configuration:');
+  console.log(`  General: ${rateLimitMaxRequests} requests per ${rateLimitWindow / 1000} seconds`);
+  console.log(`  Scraping: ${scrapeRateLimitMaxRequests} requests per ${scrapeRateLimitWindow / 1000} seconds`);
 });

@@ -11,9 +11,11 @@ ALLOWED_ORIGINS=http://localhost:3000,https://interviewiq.vercel.app
 PUPPETEER_TIMEOUT=30000
 MAX_CONCURRENT_SCRAPES=3
 
-# Rate Limiting (optional, for future use)
+# Rate Limiting Configuration
 RATE_LIMIT_WINDOW=60000
-RATE_LIMIT_MAX_REQUESTS=60
+RATE_LIMIT_MAX_REQUESTS=300
+SCRAPE_RATE_LIMIT_WINDOW=60000
+SCRAPE_RATE_LIMIT_MAX_REQUESTS=20
 
 # Cache Configuration (optional, for future use)
 CACHE_DURATION=3600000  # 1 hour in milliseconds
