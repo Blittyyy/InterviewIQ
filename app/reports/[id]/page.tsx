@@ -1,4 +1,6 @@
-import type { Metadata } from "next"
+"use client"
+
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -12,17 +14,79 @@ import {
   GlobeIcon,
 } from "lucide-react"
 import Link from "next/link"
+import { getSupabaseClient } from "@/lib/supabase"
 
-export const metadata: Metadata = {
-  title: "Company Report | InterviewIQ",
-  description: "Detailed company research report to help you prepare for your interview",
+interface Report {
+  id: string
+  company_name: string
+  company_website: string | null
+  job_description: string | null
+  data: {
+    content: string
+  }
+  created_at: string
 }
 
-// This would be a server component that fetches the report data
 export default function ReportPage({ params }: { params: { id: string } }) {
-  // In a real implementation, you would fetch the report data from the API
-  // For now, we'll use placeholder data
-  const reportId = params.id
+  const [report, setReport] = useState<Report | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    const fetchReport = async () => {
+      try {
+        const supabase = getSupabaseClient()
+        const { data: { session } } = await supabase.auth.getSession()
+
+        if (!session) {
+          setError("You must be logged in to view reports")
+          return
+        }
+
+        const { data, error } = await supabase
+          .from("reports")
+          .select("*")
+          .eq("id", params.id)
+          .single()
+
+        if (error) {
+          throw error
+        }
+
+        setReport(data)
+      } catch (err) {
+        console.error("Error fetching report:", err)
+        setError(err instanceof Error ? err.message : "Failed to fetch report")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchReport()
+  }, [params.id])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#F4F7FE] to-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center">Loading report...</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !report) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#F4F7FE] to-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center text-red-500">{error || "Report not found"}</div>
+        </div>
+      </div>
+    )
+  }
+
+  // Parse the report content
+  const reportContent = report.data.content
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F4F7FE] to-white">
@@ -47,8 +111,10 @@ export default function ReportPage({ params }: { params: { id: string } }) {
 
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Google</h1>
-              <p className="text-gray-600 mt-1">Report generated on May 14, 2023</p>
+              <h1 className="text-3xl font-bold text-gray-900">{report.company_name}</h1>
+              <p className="text-gray-600 mt-1">
+                Report generated on {new Date(report.created_at).toLocaleDateString()}
+              </p>
             </div>
             <div className="mt-4 md:mt-0 flex space-x-3">
               <Button variant="outline">Save as PDF</Button>
@@ -66,6 +132,24 @@ export default function ReportPage({ params }: { params: { id: string } }) {
 
           <TabsContent value="full">
             <div className="space-y-8">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center text-xl">
+                    <BuildingIcon className="h-5 w-5 mr-2 text-[#4B6EF5]" />
+                    Report Content
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="prose max-w-none">
+                    {reportContent.split("\n").map((paragraph, index) => (
+                      <p key={index} className="text-gray-700 mb-4">
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Company Basics */}
               <Card>
                 <CardHeader className="pb-2">

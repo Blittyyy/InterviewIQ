@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { MailIcon, LockIcon, AlertCircle } from "lucide-react"
 import { getSupabaseClient } from "@/lib/supabase"
+import { FcGoogle } from "react-icons/fc"
 
 export default function LoginForm() {
   const [email, setEmail] = useState("")
@@ -84,6 +85,23 @@ export default function LoginForm() {
     }
   }
 
+  const handleGoogleSignIn = async () => {
+    try {
+      const supabase = getSupabaseClient()
+      await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: typeof window !== "undefined"
+            ? `${window.location.origin}/dashboard`
+            : undefined,
+        },
+      })
+    } catch (err) {
+      console.error("Google sign-in error:", err)
+      setError("Failed to sign in with Google")
+    }
+  }
+
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault()
     setResetMessage("")
@@ -107,6 +125,25 @@ export default function LoginForm() {
         <div className="text-center space-y-2">
           <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
           <p className="text-gray-600">Sign in to your InterviewIQ account</p>
+        </div>
+
+        {/* Google Auth Button */}
+        <Button
+          type="button"
+          className="w-full flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+          onClick={handleGoogleSignIn}
+        >
+          <FcGoogle className="h-5 w-5" />
+          Sign in with Google
+        </Button>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-2 text-gray-500">Or continue with</span>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

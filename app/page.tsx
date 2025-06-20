@@ -195,11 +195,6 @@ export default function Home() {
                         <p className="text-base text-gray-600 mb-0 text-center">
                           Sign up for a free trial to generate company insights, culture breakdowns, and more!
                         </p>
-                        <ButtonColorful
-                          label="Start Free Trial"
-                          className="mt-4 w-full"
-                          onClick={() => router.push("/signup?trial=true")}
-                        />
                       </div>
                     ) : userStatus && (userStatus.subscription_status === "pro" || userStatus.subscription_status === "enterprise") ? (
                       <div className="flex flex-col items-center justify-center h-full p-6 bg-white rounded-xl shadow border border-gray-200 mb-4">

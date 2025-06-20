@@ -1,49 +1,45 @@
-import { NextResponse, NextRequest } from "next/server"
-import { createServerSupabaseClient } from "@/lib/supabase"
-import { requireAuth } from "@/lib/requireAuth"
+import { NextResponse } from "next/server"
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+import { cookies } from "next/headers"
 import OpenAI from "openai"
-import { generateAIReport } from "@/lib/ai-utils"
+import { Ratelimit } from "@upstash/ratelimit"
+import { Redis } from "@upstash/redis"
+import { requireAuth } from "@/lib/requireAuth"
 
-export async function POST(request: NextRequest) {
-  // Validate JWT
-  const { user, error } = await requireAuth(request)
-  if (error) {
-    return NextResponse.json({ error }, { status: 401 })
-  }
+// Create Redis client
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+})
 
+// Create rate limiter
+const ratelimit = new Ratelimit({
+  redis: redis,
+  limiter: Ratelimit.slidingWindow(5, "1 d"), // 5 requests per day
+})
+
+export async function POST(request: Request) {
   try {
-    const { companyName, companyWebsite, jobDescription, userId } = await request.json()
+    const supabase = createRouteHandlerClient({ cookies })
+    const { user } = await requireAuth(supabase)
 
+    if (!user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    // Get request body
+    const { companyName, companyWebsite, jobDescription } = await request.json()
+
+    // Validate required fields
     if (!companyName) {
       return NextResponse.json({ error: "Company name is required" }, { status: 400 })
     }
 
-    const supabase = createServerSupabaseClient()
-
-    // Check if the user exists, if not create a new user
-    let userIdToUse = userId
-
-    if (!userIdToUse) {
-      // Create an anonymous user for now
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .insert([{ email: `anonymous-${Date.now()}@interviewiq.app`, plan: "free" }])
-        .select("id")
-        .single()
-
-      if (userError) {
-        console.error("Error creating user:", userError)
-        return NextResponse.json({ error: "Failed to create user" }, { status: 500 })
-      }
-
-      userIdToUse = userData.id
-    }
-
-    // Check if user exists
+    // Check if user exists and get their subscription status
     const { data: userData, error: userError } = await supabase
       .from("users")
-      .select("id, subscription_status, email_verified, device_fingerprint, trial_active, trial_start_date")
-      .eq("id", userIdToUse)
+      .select("subscription_status, trial_active, trial_start_date, reports_generated")
+      .eq("id", user.id)
       .single()
 
     if (userError) {
@@ -51,209 +47,116 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    // Check if email is verified for free users
-    if (userData.subscription_status === "free" && !userData.email_verified) {
-      return NextResponse.json(
-        { 
-          error: "Please verify your email address to start generating reports. " +
-                 "Check your inbox for a verification link. " +
-                 "If you don't see it, try checking your spam folder or request a new verification email."
-        },
-        { status: 403 }
-      )
-    }
-
-    // Only allow report generation for trial or paid users
-    if (!userData.trial_active && userData.subscription_status !== "pro" && userData.subscription_status !== "enterprise") {
-      return NextResponse.json({
-        error: "You must start a free trial or upgrade to Pro to generate reports.",
-        upgradeRequired: true,
-      }, { status: 403 });
-    }
-
-    // Enforce 3 reports per day limit for trial users
-    if (userData.trial_active) {
-      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const { count, error: countError } = await supabase
-        .from("report_logs")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", userIdToUse)
-        .gte("created_at", since);
-      if (countError) {
-        return NextResponse.json({ error: "Error checking trial report limit" }, { status: 500 });
-      }
-      if ((count ?? 0) >= 3) {
-        return NextResponse.json({
-          error: "You've used all 3 reports for today during your trial. Upgrade to Pro for unlimited reports! Your reports will reset at midnight.",
-          upgradeRequired: true,
-        }, { status: 403 });
+    // Check rate limit for free users
+    if (userData.subscription_status !== "active" && !userData.trial_active) {
+      const { success, reset } = await ratelimit.limit(user.id)
+      if (!success) {
+        const now = Date.now()
+        const retryAfter = Math.floor((reset - now) / 1000)
+        return NextResponse.json(
+          {
+            error: "Rate limit exceeded",
+            retryAfter,
+            upgradeRequired: true,
+          },
+          { status: 429 }
+        )
       }
     }
 
-    // Check if a report for this company already exists
-    const { data: existingReport, error: existingReportError } = await supabase
+    // Check if a report for this company already exists for this user
+    const { data: existingReport } = await supabase
       .from("reports")
-      .select("*")
-      .eq("company_name", companyName.toLowerCase())
-      .eq("status", "completed")
-      .order("created_at", { ascending: false })
-      .limit(1)
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("company_name", companyName)
       .single()
 
-    if (existingReportError && existingReportError.code !== "PGRST116") { // PGRST116 is "no rows returned"
-      console.error("Error checking for existing report:", existingReportError)
+    if (existingReport) {
+      return NextResponse.json({ reportId: existingReport.id })
     }
 
-    // Check if existing report is fresh enough (less than 7 days old)
-    const isReportFresh = existingReport && (() => {
-      const reportDate = new Date(existingReport.created_at)
-      const now = new Date()
-      const daysOld = (now.getTime() - reportDate.getTime()) / (1000 * 60 * 60 * 24)
-      return daysOld < 7 // Consider reports older than 7 days as stale
-    })()
+    // Generate report using OpenAI
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+    const prompt = `Generate a detailed report for ${companyName}.
+    Include:
+    1. Company Overview
+    2. Culture & Values
+    3. Interview Process
+    4. Key Talking Points
+    ${jobDescription ? "\nJob Description: " + jobDescription : ""}
+    ${companyWebsite ? "\nWebsite: " + companyWebsite : ""}`
 
-    // If we found a fresh existing report, create a new report entry but reuse the data
-    if (existingReport && isReportFresh) {
-      const { data: reportData, error: reportError } = await supabase
-        .from("reports")
-        .insert([
-          {
-            user_id: userIdToUse,
-            company_name: companyName,
-            company_website: companyWebsite || null,
-            job_description: jobDescription || null,
-            status: "completed",
-            data: existingReport.data,
-            summary: existingReport.summary,
-            created_at: new Date().toISOString(),
-          },
-        ])
-        .select("id")
-        .single()
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are an expert career coach helping job seekers prepare for interviews. Generate detailed, well-structured reports about companies.",
+        },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.7,
+      max_tokens: 2000,
+    })
 
-      if (reportError) {
-        console.error("Error creating report:", reportError)
-        return NextResponse.json({ error: "Failed to create report" }, { status: 500 })
-      }
+    const report = completion.choices[0].message?.content
 
-      // Log this report generation in report_logs
-      await supabase
-        .from("report_logs")
-        .insert([
-          {
-            user_id: userIdToUse,
-            report_id: reportData.id,
-            created_at: new Date().toISOString(),
-          },
-        ])
-
-      // Update user's report count and last report timestamp
-      await supabase
-        .from("users")
-        .update({
-          reports_generated: supabase.rpc("increment", { x: 1 }),
-          last_report_at: new Date().toISOString(),
-        })
-        .eq("id", userIdToUse)
-
-      return NextResponse.json({
-        success: true,
-        reportId: reportData.id,
-        userId: userIdToUse,
-      });
+    if (!report) {
+      throw new Error("Failed to generate report")
     }
 
-    // If no existing report found or report is stale, proceed with creating a new one
+    // Save report to database
     const { data: reportData, error: reportError } = await supabase
       .from("reports")
       .insert([
         {
-          user_id: userIdToUse,
+          user_id: user.id,
           company_name: companyName,
           company_website: companyWebsite || null,
           job_description: jobDescription || null,
-          status: "processing",
+          status: "completed",
+          data: { content: report },
         },
       ])
-      .select("id")
+      .select()
       .single()
 
     if (reportError) {
-      console.error("Error creating report:", reportError)
-      return NextResponse.json({ error: "Failed to create report" }, { status: 500 })
+      console.error("Error saving report:", reportError)
+      throw new Error("Failed to save report")
     }
 
-    // Log this report generation in report_logs
-    await supabase
-      .from("report_logs")
-      .insert([
-        {
-          user_id: userIdToUse,
-          report_id: reportData.id,
-          created_at: new Date().toISOString(),
-        },
-      ])
-
-    // Update user's report count and last report timestamp
+    // Update user's report count
     await supabase
       .from("users")
-      .update({
-        reports_generated: supabase.rpc("increment", { x: 1 }),
-        last_report_at: new Date().toISOString(),
-      })
-      .eq("id", userIdToUse)
+      .update({ reports_generated: (userData.reports_generated || 0) + 1 })
+      .eq("id", user.id)
 
-    // === OpenAI Integration ===
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    
-    const prompt = `Generate a detailed company research report for the following:
-Company Name: ${companyName}
-${companyWebsite ? `Company Website: ${companyWebsite}\n` : ""}${jobDescription ? `Job Description: ${jobDescription}\n` : ""}
-
-The report should include:
-- Company basics (founded, HQ, CEO, size, mission)
-- Products & services
-- Recent news & press (3-5 headlines with title, link, source, date)
-- Culture & values
-- Competitors & market overview
-- 3-5 strategic interview talking points
-- A short summary (tldr) and a 'Why this company?' answer for interview motivation
-Format the response as a JSON object with keys: basics, products, news, culture, competitors, talkingPoints, summary.`;
-
-    try {
-      const result = await generateAIReport(openai, user, prompt, reportData.id);
-      
-      await supabase
-        .from("reports")
-        .update({
-          status: "completed",
-          data: result.data,
-          summary: result.summary,
-        })
-        .eq("id", reportData.id);
-
-      console.log(`Report generated successfully using ${result.model} for user ${userIdToUse}`);
-
-      return NextResponse.json({
+    // Log AI request
+    await supabase.from("ai_request_logs").insert([
+      {
+        user_id: user.id,
+        report_id: reportData.id,
+        model: "gpt-4",
+        input_tokens: completion.usage?.prompt_tokens || 0,
+        output_tokens: completion.usage?.completion_tokens || 0,
+        cost: 0.01, // Approximate cost for GPT-4
+        response_time_ms: 0, // You could calculate this
         success: true,
-        reportId: reportData.id,
-        userId: userIdToUse,
-      });
-    } catch (error) {
-      console.error("AI report generation failed:", error);
-      
-      await supabase
-        .from("reports")
-        .update({ status: "failed" })
-        .eq("id", reportData.id);
-        
-      return NextResponse.json({ 
-        error: "Failed to generate report. Please try again later." 
-      }, { status: 500 });
-    }
-  } catch (error) {
-    console.error("Server error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+      },
+    ])
+
+    return NextResponse.json({ reportId: reportData.id })
+  } catch (err) {
+    console.error("Error generating report:", err)
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Failed to generate report" },
+      { status: 500 }
+    )
   }
 }
 
@@ -266,7 +169,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "User ID is required" }, { status: 400 })
     }
 
-    const supabase = createServerSupabaseClient()
+    const supabase = createRouteHandlerClient({ cookies })
 
     const { data, error } = await supabase
       .from("reports")

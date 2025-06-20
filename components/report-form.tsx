@@ -55,7 +55,25 @@ export default function ReportForm({ isAuthenticated = true }: ReportFormProps) 
         return
       }
 
-      // Submit the report request
+      // 1. Scrape company website if URL is provided
+      let scrapedData = null;
+      if (companyWebsite) {
+        try {
+          const scraperUrl = `${process.env.NEXT_PUBLIC_SCRAPING_SERVICE_URL}/scrape?url=${encodeURIComponent(companyWebsite)}`;
+          const scrapeResponse = await fetch(scraperUrl);
+          if (scrapeResponse.ok) {
+            const result = await scrapeResponse.json();
+            scrapedData = result.data;
+          } else {
+            console.warn("Failed to scrape website, proceeding without scraped data.");
+          }
+        } catch (scrapeError) {
+          console.error("Error during website scraping:", scrapeError);
+          // Non-critical error, so we can proceed without scraped data
+        }
+      }
+
+      // 2. Submit the report request with scraped data
       const response = await fetch("/api/reports", {
         method: "POST",
         headers: {
@@ -67,6 +85,7 @@ export default function ReportForm({ isAuthenticated = true }: ReportFormProps) 
           companyWebsite,
           jobDescription,
           userId,
+          scrapedData, // Include scraped data in the request
         }),
       })
 
@@ -150,6 +169,10 @@ export default function ReportForm({ isAuthenticated = true }: ReportFormProps) 
             <button
               type="button"
               className="w-full py-3 px-6 rounded-xl border-2 border-transparent bg-white shadow-sm font-semibold text-[#4B6EF5] hover:bg-gray-200 transition-all"
+              onClick={(e) => {
+                e.preventDefault()
+                router.push("/reports/sample")
+              }}
             >
               See a sample report
             </button>
