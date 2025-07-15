@@ -166,9 +166,7 @@ export default function SampleReportPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="prose max-w-none">
-                    <p className="text-gray-700 leading-relaxed">{sampleData.companyOverview}</p>
-                  </div>
+                  <p className="text-gray-700 leading-relaxed">{sampleData.companyOverview}</p>
                 </CardContent>
               </Card>
 
@@ -320,23 +318,52 @@ export default function SampleReportPage() {
           </TabsContent>
 
           <TabsContent value="talking-points">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center text-xl">
-                  <MessageSquareIcon className="h-5 w-5 mr-2 text-[#4B6EF5]" />
-                  Strategic Interview Questions
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-4">
-                  {sampleData.talkingPoints.map((tp, idx) => (
-                    <li key={idx} className="pb-3 border-b last:border-b-0">
-                      <p className="font-medium text-gray-900">{tp}</p>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
+            <Tabs defaultValue="company-research" className="w-full">
+              <TabsList className="mb-6">
+                <TabsTrigger value="company-research">Company Research Questions</TabsTrigger>
+                <TabsTrigger value="general">General Questions</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="company-research">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center text-xl">
+                      <MessageSquareIcon className="h-5 w-5 mr-2 text-[#4B6EF5]" />
+                      Company Research Questions
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-4">
+                      <li className="pb-3 border-b last:border-b-0"><p className="font-medium text-gray-900">What are the company’s biggest growth opportunities in the next year?</p></li>
+                      <li className="pb-3 border-b last:border-b-0"><p className="font-medium text-gray-900">How does the company measure success for this role?</p></li>
+                      <li className="pb-3 border-b last:border-b-0"><p className="font-medium text-gray-900">What are the most important values that drive the company’s culture?</p></li>
+                      <li className="pb-3 border-b last:border-b-0"><p className="font-medium text-gray-900">How does the company support innovation and new ideas?</p></li>
+                      <li className="pb-3 border-b last:border-b-0"><p className="font-medium text-gray-900">What are the main challenges the company is facing in its industry?</p></li>
+                    </ul>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="general">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center text-xl">
+                      <MessageSquareIcon className="h-5 w-5 mr-2 text-[#4B6EF5]" />
+                      General Interview Questions
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-4">
+                      <li className="pb-3 border-b last:border-b-0"><p className="font-medium text-gray-900">What does a typical day look like for someone in this role?</p></li>
+                      <li className="pb-3 border-b last:border-b-0"><p className="font-medium text-gray-900">How do you evaluate success here?</p></li>
+                      <li className="pb-3 border-b last:border-b-0"><p className="font-medium text-gray-900">What are the next steps in the interview process?</p></li>
+                      <li className="pb-3 border-b last:border-b-0"><p className="font-medium text-gray-900">What do you enjoy most about working here?</p></li>
+                      <li className="pb-3 border-b last:border-b-0"><p className="font-medium text-gray-900">How does the team handle feedback and professional development?</p></li>
+                    </ul>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </div>

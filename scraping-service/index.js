@@ -7,6 +7,8 @@ import { URL } from 'url';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import axios from 'axios';
+import * as cheerio from 'cheerio';
 
 dotenv.config();
 
@@ -108,6 +110,65 @@ app.get('/scrape', scrapeLimiter, async (req, res) => {
   }
 });
 
+// PDF generation endpoint
+app.post('/generate-pdf', async (req, res) => {
+  console.log('PDF generation request received');
+  try {
+    const { html, filename } = req.body;
+    
+    if (!html) {
+      console.error('No HTML content provided');
+      return res.status(400).json({ error: 'HTML content is required' });
+    }
+
+    console.log('Launching Puppeteer browser...');
+    const browser = await puppeteer.launch({ 
+      headless: "new",
+      args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+    });
+
+    try {
+      console.log('Creating new page...');
+      const page = await browser.newPage();
+      
+      console.log('Setting HTML content...');
+      // Set content and wait for it to load
+      await page.setContent(html, { waitUntil: 'networkidle0' });
+      
+      console.log('Generating PDF...');
+      // Generate PDF
+      const pdfBuffer = await page.pdf({
+        format: 'Letter',
+        margin: {
+          top: '0.5in',
+          right: '0.5in',
+          bottom: '0.5in',
+          left: '0.5in'
+        },
+        printBackground: true,
+        displayHeaderFooter: false
+      });
+
+      console.log('PDF generated successfully, size:', pdfBuffer.length);
+
+      // Set response headers
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename || 'report.pdf'}"`);
+      
+      // Send the PDF buffer
+      res.send(Buffer.from(pdfBuffer));
+
+    } finally {
+      console.log('Closing browser...');
+      await browser.close();
+    }
+
+  } catch (error) {
+    console.error('PDF generation error:', error);
+    res.status(500).json({ error: `Failed to generate PDF: ${error.message}` });
+  }
+});
+
 /**
  * Main scraping function to orchestrate the entire process.
  * @param {string} initialUrl - The starting URL to scrape.
@@ -127,11 +188,51 @@ async function scrapeWebsite(initialUrl) {
     await page.goto(initialUrl, { waitUntil: 'domcontentloaded' });
     const baseUrl = new URL(initialUrl).origin;
 
-    // 2. Discover Relevant Pages
-    const relevantLinks = await discoverRelevantLinks(page, baseUrl);
-    const pagesToScrape = [...new Set([initialUrl, ...relevantLinks])];
-    
-    // 3. Scrape and Clean Content from each page
+    // 2. Discover prioritized pages (about, company, leadership, careers, culture, values, team, news, blog, press)
+    const prioritizedTypes = [
+      'about', 'company', 'leadership', 'careers', 'culture', 'values', 'team', 'news', 'blog', 'press', 'profile', 'bio'
+    ];
+    let allLinks = await page.$$eval('a', anchors => anchors.map(a => a.href));
+    // Add subdomain links if they match relevant keywords
+    const subdomainLinks = allLinks.filter(href => {
+      try {
+        const u = new URL(href, baseUrl);
+        return u.hostname !== new URL(baseUrl).hostname && prioritizedTypes.some(type => u.href.toLowerCase().includes(type));
+      } catch { return false; }
+    });
+    // For Kitware, explicitly add these if present
+    const kitwareSpecials = [
+      'https://www.kitware.com/about/',
+      'https://www.kitware.com/careers/',
+      'https://www.kitware.com/news/'
+    ];
+    kitwareSpecials.forEach(link => {
+      if (allLinks.includes(link) && !allLinks.includes(link)) {
+        allLinks.push(link);
+      }
+    });
+    // Find up to 8 prioritized links (internal or subdomain)
+    const prioritizedLinks = [];
+    for (const type of prioritizedTypes) {
+      const found = allLinks
+        .map(href => {
+          try { return new URL(href, baseUrl).href; } catch (e) { return null; }
+        })
+        .filter(href => href && (href.startsWith(baseUrl) || subdomainLinks.includes(href)))
+        .find(link => link && link.toLowerCase().includes(type));
+      if (found && !prioritizedLinks.includes(found)) {
+        prioritizedLinks.push(found);
+      }
+      if (prioritizedLinks.length >= 8) break;
+    }
+    // Always include the homepage
+    let pagesToScrape = [initialUrl, ...prioritizedLinks];
+    // Ensure at least 5 unique pages
+    pagesToScrape = [...new Set(pagesToScrape)].slice(0, 8);
+    // Log the URLs being scraped (prioritized)
+    console.log('\n[Scraper] Pages to scrape (prioritized):', pagesToScrape);
+
+    // 3. Scrape and Clean Content from each prioritized page
     const rawPages = [];
     for (const url of pagesToScrape) {
       try {
@@ -142,18 +243,87 @@ async function scrapeWebsite(initialUrl) {
       }
     }
 
-    // 4. Structure Extracted Data
-    const combinedText = rawPages.map(p => p.content).join('\n\n');
-    const finalResult = {
+    // 4. Structure Extracted Data (initial)
+    let combinedText = rawPages.map(p => p.content).join('\n\n');
+    let initialResult = {
       companyBasics: extractSection(combinedText, ['founded', 'ceo', 'headquarters', 'employees', 'mission']),
       productsAndServices: extractSection(combinedText, ['product', 'service', 'solution', 'offering', 'platform']),
+      companyOverview: extractSection(combinedText, ['about', 'overview', 'company', 'who we are', 'what we do']),
       cultureAndValues: extractSection(combinedText, ['culture', 'values', 'our team', 'careers']),
       recentNews: extractNews(rawPages),
       rawPages: rawPages,
     };
 
-    return finalResult;
+    // Fallback: If companyBasics is missing or incomplete, try Wikipedia then LinkedIn
+    let basics = initialResult.companyBasics || {};
+    const requiredFields = ['companyName', 'foundingYear', 'headquarters', 'ceoName', 'companySize', 'missionStatement'];
+    const missingBasics = requiredFields.filter(f => !basics || !basics[f] || basics[f] === 'Unknown');
+    if (missingBasics.length > 0 && initialUrl) {
+      // Try Wikipedia
+      const wikiBasics = await scrapeWikipedia(basics.companyName || extractCompanyNameFromUrl(initialUrl));
+      if (wikiBasics) {
+        basics = { ...wikiBasics, ...basics };
+      }
+      // Check again for missing fields
+      const stillMissing = requiredFields.filter(f => !basics || !basics[f] || basics[f] === 'Unknown');
+      if (stillMissing.length > 0) {
+        // Try LinkedIn
+        const liBasics = await scrapeLinkedIn(basics.companyName || extractCompanyNameFromUrl(initialUrl));
+        if (liBasics) {
+          basics = { ...liBasics, ...basics };
+        }
+      }
+      initialResult.companyBasics = basics;
+    }
 
+    // 5. Fallback: If any required section is missing, scrape up to 5 more fallback pages
+    const missingSections = !initialResult.companyOverview || !initialResult.companyBasics || !initialResult.productsAndServices || !initialResult.cultureAndValues || !initialResult.recentNews;
+    let fallbackRawPages = [];
+    if (missingSections) {
+      const fallbackKeywords = ['team', 'leadership', 'our story', 'history', 'solutions', 'company'];
+      const fallbackLinks = allLinks
+        .map(href => {
+          try { return new URL(href, baseUrl).href; } catch (e) { return null; }
+        })
+        .filter(href => href && (href.startsWith(baseUrl) || subdomainLinks.includes(href)))
+        .filter(link => fallbackKeywords.some(keyword => link.toLowerCase().includes(keyword)))
+        .filter(link => !pagesToScrape.includes(link));
+      const fallbackPagesToScrape = [...new Set(fallbackLinks)].slice(0, 5);
+      // Log the URLs being scraped (fallback)
+      console.log('\n[Scraper] Pages to scrape (fallback):', fallbackPagesToScrape);
+      for (const url of fallbackPagesToScrape) {
+        try {
+          // Fallback: extract all <main>, <article>, <section> text
+          const content = await scrapeAndCleanPage(browser, url, true);
+          fallbackRawPages.push({ url, content });
+        } catch (e) {
+          console.warn(`Failed to scrape fallback ${url}: ${e.message}`);
+        }
+      }
+      // Merge new content
+      combinedText += '\n\n' + fallbackRawPages.map(p => p.content).join('\n\n');
+    }
+
+    // 6. Limit total pages to 10
+    const allRawPages = [...rawPages, ...fallbackRawPages].slice(0, 10);
+    // De-duplicate repeated content
+    const seen = new Set();
+    const dedupedPages = allRawPages.filter(p => {
+      if (seen.has(p.content)) return false;
+      seen.add(p.content);
+      return true;
+    });
+    combinedText = dedupedPages.map(p => p.content).join('\n\n');
+
+    // 7. Log all URLs and a sample of combined text
+    console.log('[Scraper] All URLs scraped:', dedupedPages.map(p => p.url));
+    console.log('[Scraper] Combined text sample:', combinedText.slice(0, 2000));
+
+    // 8. Return combined text and rawPages for GPT extraction
+    return {
+      combinedText,
+      rawPages: dedupedPages,
+    };
   } finally {
     await browser.close();
   }
@@ -185,7 +355,7 @@ async function discoverRelevantLinks(page, baseUrl) {
 
   return [...new Set(internalLinks)]
     .filter(link => relevantKeywords.some(keyword => link.includes(keyword)))
-    .slice(0, 5); // Limit to 5 most relevant pages
+    .slice(0, 8); // Increased to 8 most relevant pages
 }
 
 /**
@@ -194,18 +364,73 @@ async function discoverRelevantLinks(page, baseUrl) {
  * @param {string} url - The URL to scrape.
  * @returns {Promise<string>} The cleaned text content of the page.
  */
-async function scrapeAndCleanPage(browser, url) {
+async function scrapeAndCleanPage(browser, url, fallback = false) {
   const page = await browser.newPage();
   await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
-  
-  const cleanContent = await page.evaluate(() => {
-    const selectorsToRemove = 'header, footer, nav, aside, .navbar, .footer, #header, #footer, script, style, form, .cookie-banner';
-    document.querySelectorAll(selectorsToRemove).forEach(el => el.remove());
-    
-    const mainContent = document.querySelector('main, article, .main-content, #main, .content');
-    const text = mainContent ? mainContent.innerText : document.body.innerText;
-    return text.replace(/(\s\s+)/g, ' ').trim();
-  });
+
+  // Wait for key selectors to ensure content is loaded
+  try {
+    await page.waitForSelector('main, article, .main-content, #main, .content, section, .about, .company, .page, .page-content, .bio, .team, .leadership, .profile', { timeout: 10000 });
+  } catch (e) {}
+
+  // Attempt to close cookie banners/popups
+  try {
+    await page.evaluate(() => {
+      const selectors = ['.cookie-banner', '.cookie-consent', '[id*="cookie"]', '[class*="cookie"]', '.modal', '.popup'];
+      selectors.forEach(sel => {
+        document.querySelectorAll(sel).forEach(el => {
+          if (el && el.style) el.style.display = 'none';
+        });
+      });
+      // Click common accept buttons
+      const btns = Array.from(document.querySelectorAll('button, input[type="button"], input[type="submit"]'));
+      btns.forEach(btn => {
+        const txt = btn.innerText?.toLowerCase() || btn.value?.toLowerCase() || '';
+        if (txt.includes('accept') || txt.includes('agree') || txt.includes('close')) {
+          try { btn.click(); } catch (e) {}
+        }
+      });
+    });
+  } catch (e) {}
+
+  // Wait a bit for dynamic content
+  await page.waitForTimeout(2000);
+
+  let cleanContent;
+  if (fallback) {
+    // Fallback: extract all <main>, <article>, <section> text
+    cleanContent = await page.evaluate(() => {
+      let text = '';
+      ['main', 'article', 'section', '.content', '.container', '.about', '.company', '#main', '#content', '.page', '.page-content', '.bio', '.team', '.leadership', '.profile'].forEach(tag => {
+        document.querySelectorAll(tag).forEach(el => {
+          text += ' ' + el.innerText;
+        });
+      });
+      return text.replace(/(\s\s+)/g, ' ').trim();
+    });
+  } else {
+    cleanContent = await page.evaluate(() => {
+      const selectorsToRemove = 'header, footer, nav, aside, .navbar, .footer, #header, #footer, script, style, form, .cookie-banner';
+      document.querySelectorAll(selectorsToRemove).forEach(el => el.remove());
+      let text = '';
+      const containers = [
+        'main', 'article', 'section', '.content', '.container', '.about', '.company', '#main', '#content', '.page', '.page-content', '.bio', '.team', '.leadership', '.profile'
+      ];
+      containers.forEach(sel => {
+        document.querySelectorAll(sel).forEach(el => {
+          text += ' ' + el.innerText;
+        });
+      });
+      if (!text.trim()) {
+        text = document.body.innerText;
+      }
+      return text.replace(/(\s\s+)/g, ' ').trim();
+    });
+  }
+
+  // Log the scraped content for this page
+  console.log(`\n--- Scraped content for ${url} ---\n`);
+  console.log(cleanContent.slice(0, 2000)); // Log first 2000 chars
 
   await page.close();
   return cleanContent;
@@ -245,18 +470,114 @@ function extractNews(pages) {
     const newsPages = pages.filter(p => newsKeywords.some(kw => p.url.includes(kw)));
     
     for(const page of newsPages) {
-        // Simple extraction of the first few lines as potential titles
-        const potentialTitles = page.content.split('\n').filter(line => line.length > 20 && line.length < 150);
-        potentialTitles.slice(0, 3).forEach(title => {
-            news.push({
-                title: title.trim(),
-                url: page.url,
-                date: null // Date extraction is complex and unreliable without specific selectors
+        // Enhanced: extract anchor tags as news articles
+        if (page.rawHtml) {
+            // If rawHtml is available, parse it for anchors
+            const cheerio = require('cheerio');
+            const $ = cheerio.load(page.rawHtml);
+            $('a').each((_, el) => {
+                const title = $(el).text().trim();
+                const href = $(el).attr('href');
+                if (title.length > 20 && title.length < 150 && href && !href.startsWith('#')) {
+                    news.push({
+                        title,
+                        url: href.startsWith('http') ? href : new URL(href, page.url).href,
+                        date: null
+                    });
+                }
             });
-        });
+        } else {
+            // Fallback: use previous logic
+            const potentialTitles = page.content.split('\n').filter(line => line.length > 20 && line.length < 150);
+            potentialTitles.slice(0, 3).forEach(title => {
+                news.push({
+                    title: title.trim(),
+                    url: page.url,
+                    date: null // Date extraction is complex and unreliable without specific selectors
+                });
+            });
+        }
     }
     return news.length > 0 ? news : null;
 }
+
+async function scrapeWikipedia(companyName) {
+  try {
+    const wikiUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(companyName.replace(/ /g, '_'))}`;
+    const { data } = await axios.get(wikiUrl);
+    const $ = cheerio.load(data);
+    const infobox = $('.infobox.vcard');
+    if (!infobox.length) return null;
+    let basics = {};
+    infobox.find('tr').each((_, el) => {
+      const label = $(el).find('th').text().trim().toLowerCase();
+      const value = $(el).find('td').text().trim();
+      if (label.includes('founded')) basics.foundingYear = value.split('\n')[0];
+      if (label.includes('headquarters')) basics.headquarters = value.split('\n')[0];
+      if (label.includes('ceo') || label.includes('founder') || label.includes('key people')) basics.ceoName = value.split('\n')[0];
+      if (label.includes('number of employees')) basics.companySize = value.split('\n')[0];
+    });
+    // Mission: try to find a mission statement in the lead or infobox
+    const mission = $('p').first().text().trim();
+    if (mission) basics.missionStatement = mission;
+    basics.companyName = companyName;
+    return basics;
+  } catch (e) {
+    return null;
+  }
+}
+
+async function scrapeLinkedIn(companyName) {
+  try {
+    // LinkedIn public search URL
+    const searchUrl = `https://www.linkedin.com/search/results/companies/?keywords=${encodeURIComponent(companyName)}`;
+    const { data } = await axios.get(searchUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    const $ = cheerio.load(data);
+    // Try to find the first company result
+    const companyLink = $('a.app-aware-link').attr('href');
+    if (!companyLink) return null;
+    const { data: companyPage } = await axios.get(companyLink, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    const $$ = cheerio.load(companyPage);
+    let basics = { companyName };
+    // Try to extract basics from the LinkedIn company page
+    $$('.org-top-card-summary-info-list__info-item').each((_, el) => {
+      const text = $$(el).text().trim();
+      if (/\d{4}/.test(text) && !basics.foundingYear) basics.foundingYear = text;
+      if (/employees/i.test(text)) basics.companySize = text;
+      if (/headquarters/i.test(text)) basics.headquarters = text;
+    });
+    // CEO: try to find in the page
+    const ceo = $$('.org-top-card-summary__title').text().trim();
+    if (ceo) basics.ceoName = ceo;
+    // Mission: try to find in the about section
+    const mission = $$('.break-words').first().text().trim();
+    if (mission) basics.missionStatement = mission;
+    return basics;
+  } catch (e) {
+    return null;
+  }
+}
+
+function extractCompanyNameFromUrl(url) {
+  try {
+    const { hostname } = new URL(url);
+    const parts = hostname.split('.');
+    if (parts.length > 1) return parts[parts.length - 2];
+    return hostname;
+  } catch {
+    return '';
+  }
+}
+
+// Health check endpoint
+app.get('/', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    service: 'scraping-service',
+    port: port,
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Start server
 app.listen(port, () => {

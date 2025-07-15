@@ -1,0 +1,1 @@
+ALTER TABLE reports ADD COLUMN last_regenerated_at TIMESTAMP; 

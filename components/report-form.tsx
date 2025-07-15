@@ -46,6 +46,16 @@ export default function ReportForm({ isAuthenticated = true }: ReportFormProps) 
       const userId = session?.user?.id
       const accessToken = session?.access_token
 
+      // --- Fix: If companyName is a URL, set it as companyWebsite and clear companyName ---
+      let name = companyName.trim();
+      let website = companyWebsite.trim();
+      const urlPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w- ./?%&=]*)?$/i;
+      if (!website && urlPattern.test(name)) {
+        website = name;
+        name = "";
+      }
+      // --- End fix ---
+
       if (!accessToken) {
         setError("You must be logged in to generate a report. Redirecting to login...")
         setIsSubmitting(false)
@@ -57,9 +67,9 @@ export default function ReportForm({ isAuthenticated = true }: ReportFormProps) 
 
       // 1. Scrape company website if URL is provided
       let scrapedData = null;
-      if (companyWebsite) {
+      if (website) {
         try {
-          const scraperUrl = `${process.env.NEXT_PUBLIC_SCRAPING_SERVICE_URL}/scrape?url=${encodeURIComponent(companyWebsite)}`;
+          const scraperUrl = `${process.env.NEXT_PUBLIC_SCRAPING_SERVICE_URL}/scrape?url=${encodeURIComponent(website)}`;
           const scrapeResponse = await fetch(scraperUrl);
           if (scrapeResponse.ok) {
             const result = await scrapeResponse.json();
@@ -81,8 +91,8 @@ export default function ReportForm({ isAuthenticated = true }: ReportFormProps) 
           Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
-          companyName,
-          companyWebsite,
+          companyName: name,
+          companyWebsite: website,
           jobDescription,
           userId,
           scrapedData, // Include scraped data in the request
