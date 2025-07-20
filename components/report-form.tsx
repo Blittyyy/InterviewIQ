@@ -69,7 +69,14 @@ export default function ReportForm({ isAuthenticated = true }: ReportFormProps) 
       let scrapedData = null;
       if (website) {
         try {
-          const scraperUrl = `${process.env.NEXT_PUBLIC_SCRAPING_SERVICE_URL}/scrape?url=${encodeURIComponent(website)}`;
+          // Use local scraping service for development, deployed service for production
+          const scrapingServiceUrl = process.env.NODE_ENV === 'development' 
+            ? 'http://localhost:3005' 
+            : (process.env.NEXT_PUBLIC_SCRAPING_SERVICE_URL || 'https://scraping-service.fly.dev');
+          
+          const scraperUrl = `${scrapingServiceUrl}/scrape?url=${encodeURIComponent(website)}`;
+          console.log('Scraping URL:', scraperUrl);
+          
           const scrapeResponse = await fetch(scraperUrl);
           if (scrapeResponse.ok) {
             const result = await scrapeResponse.json();

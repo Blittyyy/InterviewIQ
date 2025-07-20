@@ -182,147 +182,29 @@ async function scrapeWebsite(initialUrl) {
 
   try {
     const page = await browser.newPage();
-    await page.setDefaultNavigationTimeout(60000);
+    await page.setDefaultNavigationTimeout(30000);
 
-    // 1. Load the Homepage
+    // Simple: Just scrape the main page
     await page.goto(initialUrl, { waitUntil: 'domcontentloaded' });
-    const baseUrl = new URL(initialUrl).origin;
-
-    // 2. Discover prioritized pages (about, company, leadership, careers, culture, values, team, news, blog, press)
-    const prioritizedTypes = [
-      'about', 'company', 'leadership', 'careers', 'culture', 'values', 'team', 'news', 'blog', 'press', 'profile', 'bio'
-    ];
-    let allLinks = await page.$$eval('a', anchors => anchors.map(a => a.href));
-    // Add subdomain links if they match relevant keywords
-    const subdomainLinks = allLinks.filter(href => {
-      try {
-        const u = new URL(href, baseUrl);
-        return u.hostname !== new URL(baseUrl).hostname && prioritizedTypes.some(type => u.href.toLowerCase().includes(type));
-      } catch { return false; }
+    
+    // Get the page content
+    const content = await page.evaluate(() => {
+      const body = document.body;
+      if (!body) return '';
+      
+      // Remove script and style elements
+      const scripts = document.querySelectorAll('script, style, noscript');
+      scripts.forEach(el => el.remove());
+      
+      return body.innerText || body.textContent || '';
     });
-    // For Kitware, explicitly add these if present
-    const kitwareSpecials = [
-      'https://www.kitware.com/about/',
-      'https://www.kitware.com/careers/',
-      'https://www.kitware.com/news/'
-    ];
-    kitwareSpecials.forEach(link => {
-      if (allLinks.includes(link) && !allLinks.includes(link)) {
-        allLinks.push(link);
-      }
-    });
-    // Find up to 8 prioritized links (internal or subdomain)
-    const prioritizedLinks = [];
-    for (const type of prioritizedTypes) {
-      const found = allLinks
-        .map(href => {
-          try { return new URL(href, baseUrl).href; } catch (e) { return null; }
-        })
-        .filter(href => href && (href.startsWith(baseUrl) || subdomainLinks.includes(href)))
-        .find(link => link && link.toLowerCase().includes(type));
-      if (found && !prioritizedLinks.includes(found)) {
-        prioritizedLinks.push(found);
-      }
-      if (prioritizedLinks.length >= 8) break;
-    }
-    // Always include the homepage
-    let pagesToScrape = [initialUrl, ...prioritizedLinks];
-    // Ensure at least 5 unique pages
-    pagesToScrape = [...new Set(pagesToScrape)].slice(0, 8);
-    // Log the URLs being scraped (prioritized)
-    console.log('\n[Scraper] Pages to scrape (prioritized):', pagesToScrape);
 
-    // 3. Scrape and Clean Content from each prioritized page
-    const rawPages = [];
-    for (const url of pagesToScrape) {
-      try {
-        const content = await scrapeAndCleanPage(browser, url);
-        rawPages.push({ url, content });
-      } catch (e) {
-        console.warn(`Failed to scrape ${url}: ${e.message}`);
-      }
-    }
+    console.log('[Scraper] Content length:', content.length);
+    console.log('[Scraper] Content preview:', content.substring(0, 500));
 
-    // 4. Structure Extracted Data (initial)
-    let combinedText = rawPages.map(p => p.content).join('\n\n');
-    let initialResult = {
-      companyBasics: extractSection(combinedText, ['founded', 'ceo', 'headquarters', 'employees', 'mission']),
-      productsAndServices: extractSection(combinedText, ['product', 'service', 'solution', 'offering', 'platform']),
-      companyOverview: extractSection(combinedText, ['about', 'overview', 'company', 'who we are', 'what we do']),
-      cultureAndValues: extractSection(combinedText, ['culture', 'values', 'our team', 'careers']),
-      recentNews: extractNews(rawPages),
-      rawPages: rawPages,
-    };
-
-    // Fallback: If companyBasics is missing or incomplete, try Wikipedia then LinkedIn
-    let basics = initialResult.companyBasics || {};
-    const requiredFields = ['companyName', 'foundingYear', 'headquarters', 'ceoName', 'companySize', 'missionStatement'];
-    const missingBasics = requiredFields.filter(f => !basics || !basics[f] || basics[f] === 'Unknown');
-    if (missingBasics.length > 0 && initialUrl) {
-      // Try Wikipedia
-      const wikiBasics = await scrapeWikipedia(basics.companyName || extractCompanyNameFromUrl(initialUrl));
-      if (wikiBasics) {
-        basics = { ...wikiBasics, ...basics };
-      }
-      // Check again for missing fields
-      const stillMissing = requiredFields.filter(f => !basics || !basics[f] || basics[f] === 'Unknown');
-      if (stillMissing.length > 0) {
-        // Try LinkedIn
-        const liBasics = await scrapeLinkedIn(basics.companyName || extractCompanyNameFromUrl(initialUrl));
-        if (liBasics) {
-          basics = { ...liBasics, ...basics };
-        }
-      }
-      initialResult.companyBasics = basics;
-    }
-
-    // 5. Fallback: If any required section is missing, scrape up to 5 more fallback pages
-    const missingSections = !initialResult.companyOverview || !initialResult.companyBasics || !initialResult.productsAndServices || !initialResult.cultureAndValues || !initialResult.recentNews;
-    let fallbackRawPages = [];
-    if (missingSections) {
-      const fallbackKeywords = ['team', 'leadership', 'our story', 'history', 'solutions', 'company'];
-      const fallbackLinks = allLinks
-        .map(href => {
-          try { return new URL(href, baseUrl).href; } catch (e) { return null; }
-        })
-        .filter(href => href && (href.startsWith(baseUrl) || subdomainLinks.includes(href)))
-        .filter(link => fallbackKeywords.some(keyword => link.toLowerCase().includes(keyword)))
-        .filter(link => !pagesToScrape.includes(link));
-      const fallbackPagesToScrape = [...new Set(fallbackLinks)].slice(0, 5);
-      // Log the URLs being scraped (fallback)
-      console.log('\n[Scraper] Pages to scrape (fallback):', fallbackPagesToScrape);
-      for (const url of fallbackPagesToScrape) {
-        try {
-          // Fallback: extract all <main>, <article>, <section> text
-          const content = await scrapeAndCleanPage(browser, url, true);
-          fallbackRawPages.push({ url, content });
-        } catch (e) {
-          console.warn(`Failed to scrape fallback ${url}: ${e.message}`);
-        }
-      }
-      // Merge new content
-      combinedText += '\n\n' + fallbackRawPages.map(p => p.content).join('\n\n');
-    }
-
-    // 6. Limit total pages to 10
-    const allRawPages = [...rawPages, ...fallbackRawPages].slice(0, 10);
-    // De-duplicate repeated content
-    const seen = new Set();
-    const dedupedPages = allRawPages.filter(p => {
-      if (seen.has(p.content)) return false;
-      seen.add(p.content);
-      return true;
-    });
-    combinedText = dedupedPages.map(p => p.content).join('\n\n');
-
-    // 7. Log all URLs and a sample of combined text
-    console.log('[Scraper] All URLs scraped:', dedupedPages.map(p => p.url));
-    console.log('[Scraper] Combined text sample:', combinedText.slice(0, 2000));
-
-    // 8. Return combined text and rawPages for GPT extraction
     return {
-      combinedText,
-      rawPages: dedupedPages,
+      combinedText: content,
+      rawPages: [{ url: initialUrl, content }],
     };
   } finally {
     await browser.close();

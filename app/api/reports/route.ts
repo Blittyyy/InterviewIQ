@@ -354,7 +354,39 @@ export async function POST(request: Request) {
       combinedText = finalScrapedData;
     }
 
+    // Validate that we have meaningful content before proceeding
+    if (!combinedText || combinedText.trim().length < 100) {
+      console.warn('Insufficient scraped content for', companyName, companyWebsite);
+      console.log('Combined text length:', combinedText?.length || 0);
+      console.log('Combined text preview:', combinedText?.substring(0, 200));
+      
+      // Try to get company name from URL if not provided
+      let companyNameForSearch = companyName;
+      if (!companyNameForSearch && companyWebsite) {
+        try {
+          const url = new URL(companyWebsite);
+          companyNameForSearch = url.hostname.replace('www.', '').split('.')[0];
+        } catch (e) {
+          console.error('Error parsing URL:', e);
+        }
+      }
+      
+      if (companyNameForSearch) {
+        console.log('Attempting to find alternative sources for:', companyNameForSearch);
+        // For now, return a more helpful error message
+        return NextResponse.json({ 
+          error: `Unable to extract sufficient information from ${companyWebsite || 'the company website'}. This might be because the website requires login, uses heavy JavaScript, or blocks automated access. Try searching for "${companyNameForSearch}" on Google to find their main website or try a different company.` 
+        }, { status: 422 });
+      } else {
+        return NextResponse.json({ 
+          error: "Unable to extract sufficient information from the company website. Please try again or check if the website is accessible." 
+        }, { status: 422 });
+      }
+    }
+
     const prompt = `Extract structured company intelligence from the following scraped HTML/text. Be thorough and extract as much information as possible from the available content. 
+
+CRITICAL: If the scraped content is empty, minimal, or contains "No content found", DO NOT generate generic placeholder content. Instead, return an error indicating that insufficient data was found to generate a meaningful report.
 
 IMPORTANT: You must return ALL required fields. If a field cannot be determined from the content, provide a reasonable default or inference based on the company's industry and available information. Only use 'Unknown' if the information is truly not present in the text.
 
