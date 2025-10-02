@@ -76,7 +76,26 @@ export async function POST(request: NextRequest) {
 
     if (!dbUser?.stripe_customer_id) {
       console.error("No Stripe customer ID found for user:", user.id);
-      return NextResponse.json({ error: "No Stripe customer ID found" }, { status: 400 });
+      return NextResponse.json({ 
+        error: "No Stripe customer ID found",
+        userId: user.id,
+        userEmail: user.email 
+      }, { status: 400 });
+    }
+
+    console.log("Creating portal session for customer:", dbUser.stripe_customer_id);
+
+    // Test Stripe customer exists first
+    try {
+      const customer = await stripe.customers.retrieve(dbUser.stripe_customer_id);
+      console.log("Customer found:", customer.id);
+    } catch (customerError) {
+      console.error("Customer not found in Stripe:", customerError);
+      return NextResponse.json({ 
+        error: "Customer not found in Stripe",
+        customerId: dbUser.stripe_customer_id,
+        stripeError: customerError instanceof Error ? customerError.message : "Unknown error"
+      }, { status: 400 });
     }
 
     // Create a customer portal session
