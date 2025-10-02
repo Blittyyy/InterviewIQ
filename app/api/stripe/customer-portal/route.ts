@@ -3,7 +3,14 @@ import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 import { requireAuth } from "@/lib/requireAuth";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+// Initialize Stripe with error handling
+let stripe: Stripe;
+try {
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+} catch (error) {
+  console.error("Failed to initialize Stripe:", error);
+  throw new Error("Stripe initialization failed");
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -60,9 +67,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: portalSession.url });
   } catch (error) {
     console.error("Error creating Stripe customer portal session:", error);
-    return NextResponse.json({ 
-      error: "Internal server error", 
-      details: error instanceof Error ? error.message : "Unknown error"
-    }, { status: 500 });
+    
+    // Return more detailed error information for debugging
+    const errorResponse = {
+      error: "Internal server error",
+      details: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString(),
+    };
+    
+    return NextResponse.json(errorResponse, { status: 500 });
   }
 } 
