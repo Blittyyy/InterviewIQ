@@ -12,6 +12,27 @@ try {
   throw new Error("Stripe initialization failed");
 }
 
+export async function GET(request: NextRequest) {
+  try {
+    // Simple health check for customer portal endpoint
+    return NextResponse.json({
+      status: "ok",
+      endpoint: "customer-portal",
+      timestamp: new Date().toISOString(),
+      environment: {
+        STRIPE_SECRET_KEY: !!process.env.STRIPE_SECRET_KEY,
+        NEXT_PUBLIC_SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+        SUPABASE_SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      }
+    });
+  } catch (error) {
+    return NextResponse.json({
+      error: "Health check failed",
+      details: error instanceof Error ? error.message : "Unknown error"
+    }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Check for required environment variables
