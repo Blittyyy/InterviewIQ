@@ -4,12 +4,21 @@ import { createClient } from "@supabase/supabase-js";
 import { requireAuth } from "@/lib/requireAuth";
 
 // Initialize Stripe with error handling
-let stripe: Stripe;
-try {
-  stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-} catch (error) {
-  console.error("Failed to initialize Stripe:", error);
-  throw new Error("Stripe initialization failed");
+let stripe: Stripe | null = null;
+
+function getStripeInstance(): Stripe {
+  if (!stripe) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error("STRIPE_SECRET_KEY is not set");
+    }
+    try {
+      stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    } catch (error) {
+      console.error("Failed to initialize Stripe:", error);
+      throw new Error("Stripe initialization failed");
+    }
+  }
+  return stripe;
 }
 
 export async function GET(request: NextRequest) {
@@ -85,9 +94,12 @@ export async function POST(request: NextRequest) {
 
     console.log("Creating portal session for customer:", dbUser.stripe_customer_id);
 
+    // Get Stripe instance
+    const stripeInstance = getStripeInstance();
+
     // Test Stripe customer exists first
     try {
-      const customer = await stripe.customers.retrieve(dbUser.stripe_customer_id);
+      const customer = await stripeInstance.customers.retrieve(dbUser.stripe_customer_id);
       console.log("Customer found:", customer.id);
     } catch (customerError) {
       console.error("Customer not found in Stripe:", customerError);
@@ -99,7 +111,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create a customer portal session
-    const portalSession = await stripe.billingPortal.sessions.create({
+    const portalSession = await stripeInstance.billingPortal.sessions.create({
       customer: dbUser.stripe_customer_id,
       return_url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000/dashboard",
     });
